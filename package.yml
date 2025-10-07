@@ -1,0 +1,11 @@
+package: yform_lang_fields
+version: '1.0.0'
+author: 'KLXM Crossmedia / Thomas Skerbis'
+supportpage: 'https://klxm.de'
+
+requires:
+    packages:
+        yform: '>=4.0'
+    redaxo: '^5.15'
+    php:
+        version: '^8.1'

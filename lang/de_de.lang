@@ -1,0 +1,34 @@
+yform_lang_fields_title = YForm Lang Fields
+
+yform_lang_fields_select_language = Sprache auswählen...
+yform_lang_fields_add_translation = Übersetzung hinzufügen
+yform_lang_fields_remove_translation = Übersetzung entfernen
+yform_lang_fields_language = Sprache
+yform_lang_fields_translation = Übersetzung
+yform_lang_fields_no_translations = Keine Übersetzungen vorhanden
+yform_lang_fields_max_one_per_language = Pro Sprache ist nur eine Übersetzung erlaubt
+
+# Field descriptions
+yform_values_lang_text_description = Mehrsprachiges Textfeld mit JSON-Speicherung
+yform_values_lang_textarea_description = Mehrsprachiges Textarea-Feld mit JSON-Speicherung
+yform_values_lang_media_description = Mehrsprachiges Medienfeld mit JSON-Speicherung
+
+yform_lang_fields_lang_text_desc = Mehrsprachiges Textfeld mit JSON-Speicherung
+yform_lang_fields_lang_textarea_desc = Mehrsprachiges Textarea-Feld mit optional CKEditor5
+yform_lang_fields_lang_media_desc = Mehrsprachiges Medienfeld für verschiedene Dateien pro Sprache
+
+# Settings
+yform_lang_fields_settings = Einstellungen
+yform_lang_fields_enable_all_tables = Für alle YForm-Tabellen aktivieren
+yform_lang_fields_default_required_languages = Standard-Pflichtsprachen
+yform_lang_fields_enable_auto_translation = Automatische Übersetzung aktivieren (experimental)
+
+# Validation messages
+yform_lang_fields_validation_required = Dieses Feld ist in mindestens einer Sprache erforderlich
+yform_lang_fields_validation_duplicate_language = Diese Sprache wurde bereits hinzugefügt
+yform_lang_fields_validation_invalid_json = Ungültiges JSON-Format in den Sprachdaten
+
+# API messages
+yform_lang_fields_api_dataset_get_lang = Wert für Sprache {0} abrufen
+yform_lang_fields_api_dataset_set_lang = Wert für Sprache {0} setzen
+yform_lang_fields_api_dataset_has_translation = Übersetzung für Sprache {0} prüfen

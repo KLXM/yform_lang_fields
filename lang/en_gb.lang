@@ -1,0 +1,30 @@
+yform_lang_fields_title = YForm Lang Fields
+
+yform_lang_fields_select_language = Select language...
+yform_lang_fields_add_translation = Add translation
+yform_lang_fields_remove_translation = Remove translation
+yform_lang_fields_language = Language
+yform_lang_fields_translation = Translation
+yform_lang_fields_no_translations = No translations available
+yform_lang_fields_max_one_per_language = Only one translation per language allowed
+
+# Field descriptions
+yform_lang_fields_lang_text_desc = Multilingual text field with JSON storage
+yform_lang_fields_lang_textarea_desc = Multilingual textarea field with optional CKEditor5
+yform_lang_fields_lang_media_desc = Multilingual media field for different files per language
+
+# Settings
+yform_lang_fields_settings = Settings
+yform_lang_fields_enable_all_tables = Enable for all YForm tables
+yform_lang_fields_default_required_languages = Default required languages
+yform_lang_fields_enable_auto_translation = Enable automatic translation (experimental)
+
+# Validation messages
+yform_lang_fields_validation_required = This field is required in at least one language
+yform_lang_fields_validation_duplicate_language = This language has already been added
+yform_lang_fields_validation_invalid_json = Invalid JSON format in language data
+
+# API messages
+yform_lang_fields_api_dataset_get_lang = Get value for language {0}
+yform_lang_fields_api_dataset_set_lang = Set value for language {0}
+yform_lang_fields_api_dataset_has_translation = Check translation for language {0}
