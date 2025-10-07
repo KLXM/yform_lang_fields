@@ -238,16 +238,16 @@ $germanTitle = \KLXM\YformLangFields\LangHelper::getValueForLanguage($titleJson,
 ```php
 use KLXM\YformLangFields\LangDataset;
 
-class Article extends LangDataset
+class BlogArticle extends LangDataset
 {
     public static function tableName()
     {
-        return 'rex_article';
+        return 'rex_blog_article'; // Deine YForm-Tabelle
     }
 }
 
 // Jetzt automatisch als Array!
-$article = Article::get(1);
+$article = BlogArticle::get(1);
 $titleArray = $article->getValue('title');
 // Gibt zurück: [
 //     ['clang_id' => 1, 'value' => 'Deutscher Titel'],
