@@ -214,6 +214,8 @@ $yform->setValueField('lang_media', [
 
 ### Daten auslesen
 
+#### Mit Standard YOrm Dataset
+
 ```php
 // Rohdaten (JSON-String)
 $titleJson = $dataset->getValue('title');
@@ -229,21 +231,40 @@ $titleArray = \KLXM\YformLangFields\LangHelper::normalizeLanguageData($titleJson
 // Wert für spezifische Sprache
 $germanTitle = \KLXM\YformLangFields\LangHelper::getValueForLanguage($titleJson, 1);
 // Gibt zurück: 'Deutscher Titel'
+```
 
-$englishTitle = \KLXM\YformLangFields\LangHelper::getValueForLanguage($titleJson, 2);
-// Gibt zurück: 'English Title'
+#### Mit LangDataset (Automatische Array-Konvertierung) ⭐
 
-// Prüfen ob Übersetzung existiert
-$hasEnglish = \KLXM\YformLangFields\LangHelper::hasTranslationForLanguage($titleJson, 2);
-// Gibt zurück: true
+```php
+use KLXM\YformLangFields\LangDataset;
 
-// Media mit Text (JSON-String)
-$imageJson = $dataset->getValue('featured_image');
-// Gibt zurück: '[{"clang_id":1,"value":{"media":"bild.jpg","text":"Alt-Text"}},...]'
+class Article extends LangDataset
+{
+    public static function tableName()
+    {
+        return 'rex_article';
+    }
+}
 
-// Media-Werte extrahieren
-$imageArray = \KLXM\YformLangFields\LangHelper::normalizeLanguageData($imageJson);
-// Bei Media mit with_text ist value ein Array: ['media' => '...', 'text' => '...']
+// Jetzt automatisch als Array!
+$article = Article::get(1);
+$titleArray = $article->getValue('title');
+// Gibt zurück: [
+//     ['clang_id' => 1, 'value' => 'Deutscher Titel'],
+//     ['clang_id' => 2, 'value' => 'English Title']
+// ]
+
+// Convenience-Methoden
+$currentTitle = $article->getLang('title'); // Aktuelle Sprache
+$germanTitle = $article->getLangValue('title', 1); // Spezifische Sprache
+$allTitles = $article->getAllLangValues('title'); // [1 => 'Deutscher Titel', 2 => 'English Title']
+
+// Wert setzen
+$article->setLangValue('title', 1, 'Neuer Titel');
+$article->save();
+
+// Raw JSON wenn nötig
+$titleJson = $article->getRawValue('title');
 ```
 
 ## 🗄️ Datenstruktur
