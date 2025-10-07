@@ -445,6 +445,10 @@ MIT License
 **KLXM Crossmedia / Thomas Skerbis**  
 Website: [https://klxm.de](https://klxm.de)
 
+## 🤝 Credits
+
+Mit Unterstützung von **GitHub Copilot** - KI-gestützter Code-Assistent für schnellere Entwicklung und beste Praktiken.
+
 ## 🔗 Links
 
 - [REDAXO](https://redaxo.org/)
