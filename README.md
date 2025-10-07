@@ -2,8 +2,6 @@
 
 Mehrsprachige Felder für REDAXO YForm - Unterstützt einfache Text-, Textarea- und Media-Felder mit CKEditor 5 Integration.
 
-
-
 ## ✨ Features
 
 - **3 Feldtypen**: Text, Textarea und Media mit vollständiger Mehrsprachigkeit
@@ -217,35 +215,35 @@ $yform->setValueField('lang_media', [
 ### Daten auslesen
 
 ```php
-// Einfacher Wert
-$title = $dataset->getValue('title');
+// Rohdaten (JSON-String)
+$titleJson = $dataset->getValue('title');
+// Gibt zurück: '[{"clang_id":1,"value":"Deutscher Titel"},{"clang_id":2,"value":"English Title"}]'
+
+// Als Array mit LangHelper
+$titleArray = \KLXM\YformLangFields\LangHelper::normalizeLanguageData($titleJson);
 // Gibt zurück: [
 //     ['clang_id' => 1, 'value' => 'Deutscher Titel'],
 //     ['clang_id' => 2, 'value' => 'English Title']
 // ]
 
-// Wert für aktuelle Sprache
-$currentTitle = \KLXM\YformLangFields\LangHelper::getValue($dataset, 'title');
-// Gibt zurück: 'Deutscher Titel' (für clang_id = 1)
-
 // Wert für spezifische Sprache
-$englishTitle = \KLXM\YformLangFields\LangHelper::getValue($dataset, 'title', 2);
+$germanTitle = \KLXM\YformLangFields\LangHelper::getValueForLanguage($titleJson, 1);
+// Gibt zurück: 'Deutscher Titel'
+
+$englishTitle = \KLXM\YformLangFields\LangHelper::getValueForLanguage($titleJson, 2);
 // Gibt zurück: 'English Title'
 
-// Media mit Text
-$image = $dataset->getValue('featured_image');
-// Gibt zurück: [
-//     ['clang_id' => 1, 'value' => ['media' => 'bild.jpg', 'text' => 'Alt-Text']],
-//     ['clang_id' => 2, 'value' => ['media' => 'image.jpg', 'text' => 'Alt text']]
-// ]
+// Prüfen ob Übersetzung existiert
+$hasEnglish = \KLXM\YformLangFields\LangHelper::hasTranslationForLanguage($titleJson, 2);
+// Gibt zurück: true
 
-// Media-Dateiname extrahieren
-$imageFile = \KLXM\YformLangFields\LangHelper::getMediaValue($dataset, 'featured_image');
-// Gibt zurück: 'bild.jpg'
+// Media mit Text (JSON-String)
+$imageJson = $dataset->getValue('featured_image');
+// Gibt zurück: '[{"clang_id":1,"value":{"media":"bild.jpg","text":"Alt-Text"}},...]'
 
-// Media-Text extrahieren
-$imageAlt = \KLXM\YformLangFields\LangHelper::getMediaText($dataset, 'featured_image');
-// Gibt zurück: 'Alt-Text'
+// Media-Werte extrahieren
+$imageArray = \KLXM\YformLangFields\LangHelper::normalizeLanguageData($imageJson);
+// Bei Media mit with_text ist value ein Array: ['media' => '...', 'text' => '...']
 ```
 
 ## 🗄️ Datenstruktur
