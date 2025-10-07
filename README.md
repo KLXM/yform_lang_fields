@@ -447,7 +447,7 @@ Website: [https://klxm.de](https://klxm.de)
 
 ## 🤝 Credits
 
-Mit Unterstützung von **GitHub Copilot** - KI-gestützter Code-Assistent für schnellere Entwicklung und beste Praktiken.
+Mit Unterstützung von **GitHub Copilot** - Dieses Addon wurde in enger Zusammenarbeit mit GitHub Copilot entwickelt. Von der initialen Architektur über die CKEditor 5 Integration, das REDAXO Media-Widget-System bis hin zur modernen MBlock-Style UI - jede Zeile Code, jede Funktion und diese Dokumentation entstanden im Dialog zwischen Entwickler und KI. Ein perfektes Beispiel für produktive Mensch-Maschine-Kollaboration! 🤖✨
 
 ## 🔗 Links
 
