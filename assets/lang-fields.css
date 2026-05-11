@@ -1,163 +1,292 @@
-/* YForm Lang Fields Styles - MBlock-ähnliches kompaktes Layout */
+/* YForm Lang Fields - kompaktes MBlock-aehnliches Layout mit Dark-Mode-Support */
 
+/* ============================================================
+   1) Light Defaults (component scope)
+   ============================================================ */
+.yform-lang-field {
+    --ylf-wrapper-bg: rgba(255, 255, 255, 0.6);
+    --ylf-panel-bg: #ffffff;
+    --ylf-panel-body-bg: rgba(255, 255, 255, 0.6);
+    --ylf-panel-border: #dddddd;
+    --ylf-panel-border-hover: #bbbbbb;
+    --ylf-panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --ylf-panel-shadow-hover: 0 1px 5px rgba(0, 0, 0, 0.1);
+    --ylf-heading-bg: #f5f5f5;
+    --ylf-heading-border: #dddddd;
+    --ylf-text: #333333;
+    --ylf-text-muted: #777777;
+    --ylf-label: #1a1a1a;
+    --ylf-input-bg: #ffffff;
+    --ylf-input-text: #555555;
+    --ylf-input-border: #dddddd;
+    --ylf-input-border-focus: #66afe9;
+    --ylf-input-shadow-focus: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+    --ylf-select-bg: #ffffff;
+    --ylf-select-border: #cccccc;
+    --ylf-select-border-hover: #8c8c8c;
+    --ylf-select-disabled-bg: #eeeeee;
+    --ylf-select-arrow: '%23555';
+    --ylf-add-section-bg: #fafafa;
+    --ylf-add-section-border: #dddddd;
+    --ylf-media-preview-bg: #ffffff;
+    --ylf-media-preview-border: #dddddd;
+    --ylf-btn-danger-hover-bg: #c9302c;
+    --ylf-btn-danger-hover-border: #ac2925;
+}
+
+/* ============================================================
+   2) Explicit Dark Mode
+   ============================================================ */
+body.rex-theme-dark .yform-lang-field {
+    --ylf-wrapper-bg: rgba(40, 48, 58, 0.4);
+    --ylf-panel-bg: #2a313a;
+    --ylf-panel-body-bg: rgba(40, 48, 58, 0.4);
+    --ylf-panel-border: #3a4654;
+    --ylf-panel-border-hover: #4f5d6f;
+    --ylf-panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --ylf-panel-shadow-hover: 0 1px 5px rgba(0, 0, 0, 0.5);
+    --ylf-heading-bg: #232a33;
+    --ylf-heading-border: #3a4654;
+    --ylf-text: #d0d8e0;
+    --ylf-text-muted: #8a96a4;
+    --ylf-label: #e8f0f7;
+    --ylf-input-bg: #1f2933;
+    --ylf-input-text: #e8f0f7;
+    --ylf-input-border: #3a4654;
+    --ylf-input-border-focus: #4a90e2;
+    --ylf-input-shadow-focus: inset 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 8px rgba(74, 144, 226, 0.5);
+    --ylf-select-bg: #1f2933;
+    --ylf-select-border: #3a4654;
+    --ylf-select-border-hover: #5a6878;
+    --ylf-select-disabled-bg: #2a313a;
+    --ylf-select-arrow: '%23bbbbbb';
+    --ylf-add-section-bg: #232a33;
+    --ylf-add-section-border: #3a4654;
+    --ylf-media-preview-bg: #1f2933;
+    --ylf-media-preview-border: #3a4654;
+    --ylf-btn-danger-hover-bg: #c9302c;
+    --ylf-btn-danger-hover-border: #ac2925;
+}
+
+/* ============================================================
+   3) Auto Dark Mode (must mirror explicit dark values)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+    body.rex-has-theme:not(.rex-theme-light) .yform-lang-field {
+        --ylf-wrapper-bg: rgba(40, 48, 58, 0.4);
+        --ylf-panel-bg: #2a313a;
+        --ylf-panel-body-bg: rgba(40, 48, 58, 0.4);
+        --ylf-panel-border: #3a4654;
+        --ylf-panel-border-hover: #4f5d6f;
+        --ylf-panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        --ylf-panel-shadow-hover: 0 1px 5px rgba(0, 0, 0, 0.5);
+        --ylf-heading-bg: #232a33;
+        --ylf-heading-border: #3a4654;
+        --ylf-text: #d0d8e0;
+        --ylf-text-muted: #8a96a4;
+        --ylf-label: #e8f0f7;
+        --ylf-input-bg: #1f2933;
+        --ylf-input-text: #e8f0f7;
+        --ylf-input-border: #3a4654;
+        --ylf-input-border-focus: #4a90e2;
+        --ylf-input-shadow-focus: inset 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 8px rgba(74, 144, 226, 0.5);
+        --ylf-select-bg: #1f2933;
+        --ylf-select-border: #3a4654;
+        --ylf-select-border-hover: #5a6878;
+        --ylf-select-disabled-bg: #2a313a;
+        --ylf-select-arrow: '%23bbbbbb';
+        --ylf-add-section-bg: #232a33;
+        --ylf-add-section-border: #3a4654;
+        --ylf-media-preview-bg: #1f2933;
+        --ylf-media-preview-border: #3a4654;
+        --ylf-btn-danger-hover-bg: #c9302c;
+        --ylf-btn-danger-hover-border: #ac2925;
+    }
+}
+
+/* ============================================================
+   Component Styles
+   ============================================================ */
 .yform-lang-field {
     margin-bottom: 20px;
-    background-color: rgba(255, 255, 255, 0.6); /* 60% transparenter weißer Hintergrund */
+    background-color: var(--ylf-wrapper-bg);
     padding: 15px;
     border-radius: 4px;
+    color: var(--ylf-text);
 }
 
 .yform-lang-field .control-label {
     font-weight: 600;
     margin-bottom: 10px;
     font-size: 14px;
+    color: var(--ylf-label);
 }
 
 .yform-lang-field .help-block.small.text-muted {
     margin: 5px 0 10px 0;
     font-size: 12px;
     line-height: 1.4;
+    color: var(--ylf-text-muted);
 }
 
 /* Kompakte Panel-Darstellung */
-.lang-fields-container {
+.yform-lang-field .lang-fields-container {
     margin-bottom: 10px;
 }
 
-.lang-field-item.panel {
+.yform-lang-field .lang-field-item.panel {
     margin-bottom: 15px;
-    border: 1px solid #ddd;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background-color: var(--ylf-panel-bg);
+    border: 1px solid var(--ylf-panel-border);
+    box-shadow: var(--ylf-panel-shadow);
 }
 
-.lang-field-item.panel:hover {
-    border-color: #bbb;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+.yform-lang-field .lang-field-item.panel:hover {
+    border-color: var(--ylf-panel-border-hover);
+    box-shadow: var(--ylf-panel-shadow-hover);
 }
 
-.lang-field-item .panel-heading {
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #ddd;
+.yform-lang-field .lang-field-item .panel-heading {
+    background-color: var(--ylf-heading-bg);
+    border-bottom: 1px solid var(--ylf-heading-border);
     padding: 10px 15px;
     font-size: 13px;
+    color: var(--ylf-text);
 }
 
-.lang-field-item .panel-heading strong {
+.yform-lang-field .lang-field-item .panel-heading strong {
     font-weight: 600;
+    color: var(--ylf-label);
 }
 
-.lang-field-item .panel-heading .text-muted {
+.yform-lang-field .lang-field-item .panel-heading .text-muted {
     font-weight: normal;
+    color: var(--ylf-text-muted);
 }
 
-.lang-field-item .panel-body {
+.yform-lang-field .lang-field-item .panel-body {
     padding: 15px;
-    background-color: rgba(255, 255, 255, 0.6); /* 60% transparenter weißer Hintergrund */
+    background-color: var(--ylf-panel-body-bg);
 }
 
-/* Delete Button im Header - rechts oben */
-.lang-field-item .btn-remove-lang-field {
+/* Delete Button im Header */
+.yform-lang-field .lang-field-item .btn-remove-lang-field {
     padding: 2px 8px;
     font-size: 12px;
     line-height: 1.5;
     position: relative;
-    z-index: 10; /* Sicherstellen dass Button klickbar ist */
+    z-index: 10;
 }
 
-.lang-field-item .btn-remove-lang-field:hover {
-    background-color: #c9302c;
-    border-color: #ac2925;
+.yform-lang-field .lang-field-item .btn-remove-lang-field:hover {
+    background-color: var(--ylf-btn-danger-hover-bg);
+    border-color: var(--ylf-btn-danger-hover-border);
 }
 
 /* Input-Felder */
-.lang-input, .lang-textarea {
-    border: 1px solid #ddd;
+.yform-lang-field .lang-input,
+.yform-lang-field .lang-textarea {
+    background-color: var(--ylf-input-bg);
+    color: var(--ylf-input-text);
+    border: 1px solid var(--ylf-input-border);
 }
 
-.lang-input:focus, .lang-textarea:focus {
-    border-color: #66afe9;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
+.yform-lang-field .lang-input:focus,
+.yform-lang-field .lang-textarea:focus {
+    border-color: var(--ylf-input-border-focus);
+    box-shadow: var(--ylf-input-shadow-focus);
 }
 
-/* Kompakter "Neue Übersetzung" Bereich */
-.lang-field-add-section .panel {
-    background-color: #fafafa;
-    border-style: dashed;
+/* Kompakter "Neue Uebersetzung"-Bereich */
+.yform-lang-field .lang-field-add-section .panel {
+    background-color: var(--ylf-add-section-bg);
+    border: 1px dashed var(--ylf-add-section-border);
 }
 
-.lang-field-add-section .panel-body {
+.yform-lang-field .lang-field-add-section .panel-body {
     padding: 10px 15px;
 }
 
 /* Select-Styling */
-.lang-field-add-section .lang-select-new {
+.yform-lang-field .lang-field-add-section .lang-select-new {
     font-size: 14px;
     height: 38px;
     padding: 8px 32px 8px 12px;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #fff;
+    background-color: var(--ylf-select-bg);
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23555%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 10px 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--ylf-select-border);
     border-radius: 4px;
     cursor: pointer;
     transition: all ease-in-out .15s;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
     line-height: 1.42857143;
-    color: #555;
+    color: var(--ylf-input-text);
 }
 
-.lang-field-add-section .lang-select-new:hover {
-    border-color: #8c8c8c;
+/* Dark-Mode-Variante mit hellerem Pfeil-Icon */
+body.rex-theme-dark .yform-lang-field .lang-field-add-section .lang-select-new {
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23bbbbbb%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
 }
 
-.lang-field-add-section .lang-select-new:focus {
-    border-color: #66afe9;
+@media (prefers-color-scheme: dark) {
+    body.rex-has-theme:not(.rex-theme-light) .yform-lang-field .lang-field-add-section .lang-select-new {
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23bbbbbb%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    }
+}
+
+.yform-lang-field .lang-field-add-section .lang-select-new:hover {
+    border-color: var(--ylf-select-border-hover);
+}
+
+.yform-lang-field .lang-field-add-section .lang-select-new:focus {
+    border-color: var(--ylf-input-border-focus);
     outline: 0;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
+    box-shadow: var(--ylf-input-shadow-focus);
 }
 
-.lang-field-add-section .lang-select-new:disabled {
-    background-color: #eee;
+.yform-lang-field .lang-field-add-section .lang-select-new:disabled {
+    background-color: var(--ylf-select-disabled-bg);
     cursor: not-allowed;
     opacity: 0.6;
 }
 
-.lang-field-add-section .btn-add-lang-field {
+.yform-lang-field .lang-field-add-section .btn-add-lang-field {
     font-size: 13px;
     padding: 5px 12px;
 }
 
-.lang-field-add-section .btn-add-lang-field:disabled {
+.yform-lang-field .lang-field-add-section .btn-add-lang-field:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 /* Media Widget */
-.media-preview {
+.yform-lang-field .media-preview {
     margin-top: 10px;
     text-align: center;
 }
 
-.media-preview img {
+.yform-lang-field .media-preview img {
     max-width: 100%;
     max-height: 150px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--ylf-media-preview-border);
     border-radius: 3px;
     padding: 5px;
-    background: #fff;
+    background: var(--ylf-media-preview-bg);
 }
 
 /* CKEditor 5 */
-.cke5-editor {
+.yform-lang-field .cke5-editor {
     min-height: 150px;
 }
 
-/* Animation für neue Felder */
+/* Animation fuer neue Felder */
 @keyframes slideInPanel {
     from {
         opacity: 0;
@@ -169,19 +298,19 @@
     }
 }
 
-.lang-field-item.newly-added {
+.yform-lang-field .lang-field-item.newly-added {
     animation: slideInPanel 0.2s ease-out;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .lang-field-add-section .col-sm-4,
-    .lang-field-add-section .col-sm-8 {
+    .yform-lang-field .lang-field-add-section .col-sm-4,
+    .yform-lang-field .lang-field-add-section .col-sm-8 {
         margin-bottom: 10px;
     }
 }
 
-/* Zusätzliches Textfeld bei Media */
-.lang-field-item .panel-body input[type="text"] + input[type="text"] {
+/* Zusaetzliches Textfeld bei Media */
+.yform-lang-field .lang-field-item .panel-body input[type="text"] + input[type="text"] {
     margin-top: 10px;
 }
