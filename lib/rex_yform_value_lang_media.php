@@ -4,7 +4,7 @@ use KLXM\YformLangFields\LangHelper;
 
 class rex_yform_value_lang_media extends rex_yform_value_abstract
 {
-    public function enterObject()
+    public function enterObject(): void
     {
         // Wert normalisieren - entweder JSON-String oder leer
         if (!is_string($this->getValue())) {
@@ -12,13 +12,14 @@ class rex_yform_value_lang_media extends rex_yform_value_abstract
         }
 
         // Default-Wert setzen wenn leer und noch nicht gesendet
-        if ('' == $this->getValue() && !$this->params['send']) {
-            $this->setValue($this->getElement('default'));
+        if ('' === $this->getValue() && !$this->params['send']) {
+            $default = $this->getElement('default');
+            $this->setValue(is_string($default) ? $default : '');
         }
 
         // Werte für E-Mail und Datenbank setzen (vor Template-Ausgabe)
         $this->params['value_pool']['email'][$this->getName()] = $this->getValue();
-        
+
         if ($this->saveInDb()) {
             $this->params['value_pool']['sql'][$this->getName()] = $this->getValue();
         }
@@ -26,128 +27,113 @@ class rex_yform_value_lang_media extends rex_yform_value_abstract
         // Template-Ausgabe nur wenn nötig
         if ($this->needsOutput() && $this->isViewable()) {
             $templateParams = $this->getTemplateParams();
-            
+
             if (!$this->isEditable()) {
-                $attributes = empty($this->getElement('attributes')) ? [] : json_decode($this->getElement('attributes'), true);
+                $attrElement = $this->getElement('attributes');
+                $attributes = empty($attrElement) || !is_string($attrElement) ? [] : (json_decode($attrElement, true) ?: []);
                 $attributes['readonly'] = 'readonly';
                 $this->setElement('attributes', json_encode($attributes));
             }
-            
+
             $this->params['form_output'][$this->getId()] = $this->parse([
-                'value.lang_field.tpl.php', 
-                'value.lang_media.tpl.php'
+                'value.lang_field.tpl.php',
+                'value.lang_media.tpl.php',
             ], $templateParams);
         }
 
-        // POST-Daten verarbeiten - prüfe auf 'send' in POST und korrekte Struktur
-        if (isset($_POST['FORM']) && isset($_POST['FORM'][$this->params['form_name']]['send'])) {
+        // POST-Daten verarbeiten
+        if (isset($_POST['FORM'][$this->params['form_name']]['send'])) {
             $formName = $this->params['form_name'];
             $fieldId = $this->getId();
-            
-            // Debug: Alle POST-Daten loggen
-            if (rex::isBackend()) {
-                error_log('YForm Lang Media Debug POST Processing: ' . json_encode([
-                    'form_name' => $formName,
-                    'field_id' => $fieldId,
-                    'field_name' => $this->getName(),
-                    'post_structure' => isset($_POST['FORM'][$formName][$fieldId]) ? 'EXISTS' : 'MISSING',
-                    'post_data' => isset($_POST['FORM'][$formName][$fieldId]) ? $_POST['FORM'][$formName][$fieldId] : 'NO DATA'
-                ]));
-            }
-            
+
             if (isset($_POST['FORM'][$formName][$fieldId]) && is_array($_POST['FORM'][$formName][$fieldId])) {
                 $postValue = $_POST['FORM'][$formName][$fieldId];
                 $jsonValue = $this->formatValueForSave($postValue);
                 $this->setValue($jsonValue);
-                
-                // Werte für E-Mail und Datenbank erneut setzen nach POST-Verarbeitung
+
                 $this->params['value_pool']['email'][$this->getName()] = $this->getValue();
-                
+
                 if ($this->saveInDb()) {
                     $this->params['value_pool']['sql'][$this->getName()] = $this->getValue();
                 }
-                
-                error_log('YForm Lang Media saved: ' . $this->getName() . ' = ' . $this->getValue());
             }
         }
     }
 
+    /**
+     * @param mixed $data
+     */
     protected function formatValueForSave($data): string
     {
         if (!is_array($data)) {
             return '';
         }
-        
+
         $normalized = [];
-        $withText = $this->getElement('with_text', false);
-        
+        $withText = (bool) $this->getElement('with_text');
+
         foreach ($data as $item) {
-            if (!is_array($item) || !isset($item['clang_id']) || !isset($item['value'])) {
+            if (!is_array($item) || !isset($item['clang_id'], $item['value'])) {
                 continue;
             }
-            
+
             $clangId = (int) $item['clang_id'];
             $value = $item['value'];
-            
-            // Prüfen ob mit Textfeld
+
             if ($withText && is_array($value)) {
-                // Neue Struktur: ['media' => '...', 'text' => '...']
-                $media = isset($value['media']) ? trim($value['media']) : '';
-                $text = isset($value['text']) ? trim($value['text']) : '';
-                
-                // Nur speichern wenn mindestens Media gefüllt ist
-                if (!empty($media)) {
+                $media = isset($value['media']) && is_scalar($value['media']) ? trim((string) $value['media']) : '';
+                $text = isset($value['text']) && is_scalar($value['text']) ? trim((string) $value['text']) : '';
+
+                if ('' !== $media) {
                     $normalized[] = [
                         'clang_id' => $clangId,
                         'value' => [
                             'media' => $media,
-                            'text' => $text
-                        ]
+                            'text' => $text,
+                        ],
                     ];
                 }
             } else {
-                // Alte Struktur: nur Dateiname
                 if (is_array($value)) {
-                    // Falls array, media-Wert extrahieren
-                    $media = isset($value['media']) ? trim($value['media']) : '';
+                    $media = isset($value['media']) && is_scalar($value['media']) ? trim((string) $value['media']) : '';
+                } elseif (is_scalar($value)) {
+                    $media = trim((string) $value);
                 } else {
-                    $media = trim($value);
+                    $media = '';
                 }
-                
-                if (!empty($media)) {
+
+                if ('' !== $media) {
                     $normalized[] = [
                         'clang_id' => $clangId,
-                        'value' => $media
+                        'value' => $media,
                     ];
                 }
             }
         }
-        
-        return json_encode($normalized, JSON_UNESCAPED_UNICODE);
+
+        $json = json_encode($normalized, JSON_UNESCAPED_UNICODE);
+        return false === $json ? '' : $json;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getTemplateParams(): array
     {
         $value = $this->parseValue($this->getValue());
-        
-        // Sicherstellen, dass $value immer ein Array ist
-        if (!is_array($value)) {
-            $value = [];
-        }
-        
+
         // Erste Sprache automatisch hinzufügen wenn noch keine Werte vorhanden
+        $firstLang = null;
         if (empty($value)) {
-            $firstLang = rex_clang::getCurrent() ?: rex_clang::getAll()[0];
-            if ($firstLang) {
-                $value = [
-                    [
-                        'clang_id' => $firstLang->getId(),
-                        'value' => ''
-                    ]
-                ];
-            }
+            $firstLang = rex_clang::getCurrent();
+            $value = [
+                [
+                    'clang_id' => $firstLang->getId(),
+                    'value' => '',
+                ],
+            ];
         }
-        
+
         return [
             'field' => $this,
             'value' => $value,
@@ -160,16 +146,21 @@ class rex_yform_value_lang_media extends rex_yform_value_abstract
             'required' => $this->getElement('required'),
             'available_languages' => LangHelper::getAvailableLanguages($value),
             'all_languages' => LangHelper::getActiveLanguages(),
-            'first_language_id' => isset($firstLang) ? $firstLang->getId() : 1
+            'first_language_id' => null !== $firstLang ? $firstLang->getId() : 1,
         ];
     }
 
+    /**
+     * @param mixed $value
+     *
+     * @return list<array{clang_id: int, value: mixed}>
+     */
     protected function parseValue($value): array
     {
-        if (empty($value) || !is_string($value)) {
+        if (!is_string($value) || '' === $value) {
             return [];
         }
-        
+
         return LangHelper::normalizeLanguageData($value);
     }
 
@@ -178,6 +169,9 @@ class rex_yform_value_lang_media extends rex_yform_value_abstract
         return 'lang_media|name|label|[description]|[types]|[category]|[preview]|[with_text]|[text_label]';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getDefinitions(): array
     {
         return [
@@ -202,35 +196,38 @@ class rex_yform_value_lang_media extends rex_yform_value_abstract
         ];
     }
 
-    public static function getListValue($params)
+    /**
+     * @param array<string, mixed> $params
+     */
+    public static function getListValue($params): string
     {
-        $value = (string) $params['subject'];
-        if (empty($value)) {
+        $value = (string) ($params['subject'] ?? '');
+        if ('' === $value) {
             return '<span>-</span>';
         }
-        
+
         $parsed = LangHelper::normalizeLanguageData($value);
         if (empty($parsed)) {
             return '<span>-</span>';
         }
-        
+
         $displayValues = [];
         foreach ($parsed as $item) {
-            if (!empty($item['value'])) {
-                $clang = rex_clang::get($item['clang_id']);
-                $langCode = $clang ? $clang->getCode() : $item['clang_id'];
-                
-                // Prüfen ob value ein Array ist (neue Struktur mit media+text)
-                if (is_array($item['value'])) {
-                    $mediaValue = isset($item['value']['media']) ? $item['value']['media'] : '';
-                    $displayValues[] = $langCode . ': ' . rex_escape($mediaValue);
-                } else {
-                    // Alte Struktur (nur String)
-                    $displayValues[] = $langCode . ': ' . rex_escape($item['value']);
-                }
+            if (empty($item['value'])) {
+                continue;
+            }
+
+            $clang = rex_clang::get($item['clang_id']);
+            $langCode = $clang ? $clang->getCode() : (string) $item['clang_id'];
+
+            if (is_array($item['value'])) {
+                $mediaValue = isset($item['value']['media']) && is_scalar($item['value']['media']) ? (string) $item['value']['media'] : '';
+                $displayValues[] = $langCode . ': ' . rex_escape($mediaValue);
+            } elseif (is_scalar($item['value'])) {
+                $displayValues[] = $langCode . ': ' . rex_escape((string) $item['value']);
             }
         }
-        
+
         return '<span>' . implode(' | ', $displayValues) . '</span>';
     }
 }

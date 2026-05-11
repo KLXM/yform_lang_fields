@@ -1,11 +1,10 @@
 <?php
 
-use KLXM\YformLangFields\LangHelper;
+/** @var rex_addon $this */
 
 /**
- * Installationsskript für yform_lang_fields
+ * Installationsskript für yform_lang_fields.
  */
-
 $this->setProperty('install', true);
 
 // Prüfen ob YForm verfügbar ist

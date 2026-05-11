@@ -8,7 +8,9 @@ use rex_i18n;
 class LangHelper
 {
     /**
-     * Alle aktiven Sprachen abrufen
+     * Alle aktiven Sprachen abrufen.
+     *
+     * @return array<int, rex_clang>
      */
     public static function getActiveLanguages(): array
     {
@@ -16,7 +18,7 @@ class LangHelper
     }
 
     /**
-     * Aktuelle Backend-Sprache abrufen
+     * Aktuelle Backend-Sprache abrufen.
      */
     public static function getCurrentLanguage(): rex_clang
     {
@@ -24,7 +26,11 @@ class LangHelper
     }
 
     /**
-     * JSON-Daten für Sprachfeld validieren und normalisieren
+     * JSON-Daten für Sprachfeld validieren und normalisieren.
+     *
+     * @param mixed $data
+     *
+     * @return list<array{clang_id: int, value: mixed}>
      */
     public static function normalizeLanguageData($data): array
     {
@@ -40,17 +46,17 @@ class LangHelper
         $languages = self::getActiveLanguages();
 
         foreach ($data as $item) {
-            if (!isset($item['clang_id']) || !isset($languages[$item['clang_id']])) {
+            if (!is_array($item) || !isset($item['clang_id']) || !isset($languages[(int) $item['clang_id']])) {
                 continue;
             }
 
             $clangId = (int) $item['clang_id'];
-            
+
             // Nur eine Übersetzung pro Sprache erlauben
             if (!isset($normalized[$clangId])) {
                 $normalized[$clangId] = [
                     'clang_id' => $clangId,
-                    'value' => $item['value'] ?? ''
+                    'value' => $item['value'] ?? '',
                 ];
             }
         }
@@ -59,15 +65,17 @@ class LangHelper
     }
 
     /**
-     * Wert für bestimmte Sprache aus JSON-Daten extrahieren
+     * Wert für bestimmte Sprache aus JSON-Daten extrahieren.
+     *
+     * @param mixed $data
      */
     public static function getValueForLanguage($data, int $clangId): string
     {
         $normalized = self::normalizeLanguageData($data);
-        
+
         foreach ($normalized as $item) {
             if ($item['clang_id'] === $clangId) {
-                return $item['value'];
+                return is_scalar($item['value']) ? (string) $item['value'] : '';
             }
         }
 
@@ -75,61 +83,56 @@ class LangHelper
     }
 
     /**
-     * Überprüfen ob für Sprache eine Übersetzung existiert
+     * Überprüfen ob für Sprache eine Übersetzung existiert.
+     *
+     * @param mixed $data
      */
     public static function hasTranslationForLanguage($data, int $clangId): bool
     {
         $value = self::getValueForLanguage($data, $clangId);
-        return !empty(trim($value));
+        return '' !== trim($value);
     }
 
     /**
-     * HTML für Sprach-Select generieren
+     * HTML für Sprach-Select generieren.
      */
-    public static function getLanguageSelectHtml(string $name, int $selectedId = null): string
+    public static function getLanguageSelectHtml(string $name, ?int $selectedId = null): string
     {
         $languages = self::getActiveLanguages();
-        $html = '<select name="' . $name . '" class="form-control lang-select">';
+        $html = '<select name="' . rex_escape($name) . '" class="form-control lang-select">';
         $html .= '<option value="">' . rex_i18n::msg('yform_lang_fields_select_language') . '</option>';
-        
+
         foreach ($languages as $lang) {
             $selected = $selectedId === $lang->getId() ? ' selected' : '';
             $html .= '<option value="' . $lang->getId() . '"' . $selected . '>';
             $html .= rex_escape($lang->getName() . ' (' . $lang->getCode() . ')');
             $html .= '</option>';
         }
-        
+
         $html .= '</select>';
         return $html;
     }
 
     /**
-     * Verfügbare Sprachen für neue Übersetzungen
+     * Verfügbare Sprachen für neue Übersetzungen.
+     *
+     * @param mixed $existingData
+     *
+     * @return list<rex_clang>
      */
     public static function getAvailableLanguages($existingData): array
     {
-        // Sicherstellen, dass existingData ein Array ist
-        if (!is_array($existingData)) {
-            $existingData = [];
-        }
-        
         $normalized = self::normalizeLanguageData($existingData);
-        
-        // Sicherstellen, dass $normalized ein Array ist vor array_column
-        if (!is_array($normalized)) {
-            $normalized = [];
-        }
-        
-        $usedLanguages = is_array($normalized) && !empty($normalized) ? array_column($normalized, 'clang_id') : [];
+        $usedLanguages = array_column($normalized, 'clang_id');
         $allLanguages = self::getActiveLanguages();
-        
+
         $available = [];
         foreach ($allLanguages as $lang) {
-            if (!in_array($lang->getId(), $usedLanguages)) {
+            if (!in_array($lang->getId(), $usedLanguages, true)) {
                 $available[] = $lang;
             }
         }
-        
+
         return $available;
     }
 }

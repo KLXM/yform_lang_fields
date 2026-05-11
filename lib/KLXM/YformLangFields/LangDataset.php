@@ -2,163 +2,184 @@
 
 namespace KLXM\YformLangFields;
 
+use rex_clang;
 use rex_yform_manager_dataset;
 use rex_yform_manager_table;
 
 /**
- * Erweiterte YOrm Dataset-Klasse mit automatischer Array-Konvertierung für Lang-Felder
- * 
+ * Erweiterte YOrm Dataset-Klasse mit automatischer Array-Konvertierung für Lang-Felder.
+ *
  * Verwendung:
- * class Article extends \KLXM\YformLangFields\LangDataset
- * {
- *     // Automatische Array-Konvertierung für alle lang_* Felder
- *     // $article->getValue('title') gibt direkt ein Array zurück
- * }
+ *   class Article extends \KLXM\YformLangFields\LangDataset
+ *   {
+ *       // $article->getValue('title') gibt direkt ein Array zurück
+ *   }
  */
 class LangDataset extends rex_yform_manager_dataset
 {
     /**
-     * Überschreibt getValue() um Lang-Felder automatisch als Array zurückzugeben
+     * Überschreibt getValue() um Lang-Felder automatisch als Array zurückzugeben.
+     *
+     * @return mixed
      */
-    public function getValue($key, $default = null)
+    public function getValue(string $key)
     {
-        $value = parent::getValue($key, $default);
-        
-        // Prüfen ob es ein Lang-Feld ist
+        $value = parent::getValue($key);
+
         if ($this->isLangField($key)) {
-            // JSON automatisch als Array zurückgeben
             return LangHelper::normalizeLanguageData($value);
         }
-        
+
         return $value;
     }
 
     /**
-     * Raw-Wert (JSON-String) abrufen ohne Konvertierung
+     * Raw-Wert (JSON-String) abrufen ohne Konvertierung.
+     *
+     * @return mixed
      */
-    public function getRawValue($key, $default = null)
+    public function getRawValue(string $key)
     {
-        return parent::getValue($key, $default);
+        return parent::getValue($key);
     }
 
     /**
-     * Prüft ob ein Feld ein Lang-Feld ist
+     * Prüft ob ein Feld ein Lang-Feld ist.
      */
     protected function isLangField(string $fieldName): bool
     {
-        static $langFields = null;
-        
-        if ($langFields === null) {
-            $langFields = [];
-            $table = rex_yform_manager_table::get(static::getTableName());
-            
+        /** @var array<string, list<string>> $cache */
+        static $cache = [];
+
+        $tableName = static::getTableName();
+
+        if (!isset($cache[$tableName])) {
+            $cache[$tableName] = [];
+            $table = rex_yform_manager_table::get($tableName);
+
             if ($table) {
-                $fields = $table->getValueFields();
-                foreach ($fields as $field) {
+                foreach ($table->getValueFields() as $field) {
                     $typeName = $field->getTypeName();
-                    if (in_array($typeName, ['lang_text', 'lang_textarea', 'lang_media'])) {
-                        $langFields[] = $field->getName();
+                    if (in_array($typeName, ['lang_text', 'lang_textarea', 'lang_media'], true)) {
+                        $cache[$tableName][] = $field->getName();
                     }
                 }
             }
         }
-        
-        return in_array($fieldName, $langFields);
+
+        return in_array($fieldName, $cache[$tableName], true);
     }
 
     /**
-     * Convenience-Methode: Wert für aktuelle Sprache
+     * Convenience-Methode: Wert für aktuelle Sprache.
+     *
+     * @return mixed
      */
-    public function getLang($key)
+    public function getLang(string $key)
     {
-        $data = $this->getValue($key); // Bereits als Array
+        /** @var list<array{clang_id: int|string, value: mixed}> $data */
+        $data = $this->getValue($key);
         $currentLang = LangHelper::getCurrentLanguage();
-        
+
         foreach ($data as $item) {
-            if ($item['clang_id'] === $currentLang->getId()) {
+            if ((int) $item['clang_id'] === $currentLang->getId()) {
                 return $item['value'];
             }
         }
-        
+
         return '';
     }
 
     /**
-     * Convenience-Methode: Wert für spezifische Sprache
+     * Convenience-Methode: Wert für spezifische Sprache.
+     *
+     * @return mixed
      */
-    public function getLangValue($key, int $clangId)
+    public function getLangValue(string $key, int $clangId)
     {
-        $data = $this->getValue($key); // Bereits als Array
-        
+        /** @var list<array{clang_id: int|string, value: mixed}> $data */
+        $data = $this->getValue($key);
+
         foreach ($data as $item) {
-            if ($item['clang_id'] === $clangId) {
+            if ((int) $item['clang_id'] === $clangId) {
                 return $item['value'];
             }
         }
-        
+
         return '';
     }
 
     /**
-     * Alle verfügbaren Übersetzungen als assoziatives Array [clang_id => value]
+     * Alle verfügbaren Übersetzungen als assoziatives Array [clang_id => value].
+     *
+     * @return array<int, mixed>
      */
-    public function getAllLangValues($key): array
+    public function getAllLangValues(string $key): array
     {
-        $data = $this->getValue($key); // Bereits als Array
+        /** @var list<array{clang_id: int|string, value: mixed}> $data */
+        $data = $this->getValue($key);
         $result = [];
-        
+
         foreach ($data as $item) {
-            $result[$item['clang_id']] = $item['value'];
+            $result[(int) $item['clang_id']] = $item['value'];
         }
-        
+
         return $result;
     }
 
     /**
-     * Setzt Wert für spezifische Sprache
+     * Setzt Wert für spezifische Sprache.
+     *
+     * @param mixed $value
      */
-    public function setLangValue($key, int $clangId, $value): self
+    public function setLangValue(string $key, int $clangId, $value): self
     {
-        $currentData = $this->getValue($key); // Bereits als Array
-        
+        /** @var list<array{clang_id: int|string, value: mixed}> $currentData */
+        $currentData = $this->getValue($key);
+
         // Bestehende Übersetzung entfernen
-        $currentData = array_filter($currentData, function($item) use ($clangId) {
-            return $item['clang_id'] !== $clangId;
-        });
-        
+        $currentData = array_values(array_filter($currentData, static function (array $item) use ($clangId): bool {
+            return (int) $item['clang_id'] !== $clangId;
+        }));
+
         // Neue Übersetzung hinzufügen
-        if (!empty($value) || $value === 0 || $value === '0') {
+        if (!empty($value) || 0 === $value || '0' === $value) {
             $currentData[] = [
                 'clang_id' => $clangId,
-                'value' => $value
+                'value' => $value,
             ];
         }
-        
-        // Als JSON speichern (Raw-Wert)
-        $jsonData = json_encode(array_values($currentData), JSON_UNESCAPED_UNICODE);
+
+        $jsonData = json_encode($currentData, JSON_UNESCAPED_UNICODE);
+        if (false === $jsonData) {
+            $jsonData = '[]';
+        }
         parent::setValue($key, $jsonData);
-        
+
         return $this;
     }
 
     /**
-     * Prüfen ob Übersetzung für Sprache existiert
+     * Prüfen ob Übersetzung für Sprache existiert.
      */
     public function hasTranslationForLanguage(string $field, int $clangId): bool
     {
+        /** @var list<array{clang_id: int|string, value: mixed}> $data */
         $data = $this->getValue($field);
-        
+
         foreach ($data as $item) {
-            if ($item['clang_id'] === $clangId && !empty($item['value'])) {
+            if ((int) $item['clang_id'] === $clangId && !empty($item['value'])) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
     /**
-     * Mehrsprachige Felder einer Tabelle identifizieren
+     * Mehrsprachige Felder einer Tabelle identifizieren.
+     *
+     * @return list<string>
      */
     public static function getMultilangFields(string $tableName): array
     {
@@ -168,25 +189,25 @@ class LangDataset extends rex_yform_manager_dataset
         }
 
         $multilangFields = [];
-        $fields = $table->getValueFields();
-        
-        foreach ($fields as $field) {
+        foreach ($table->getValueFields() as $field) {
             $typeName = $field->getTypeName();
-            if (in_array($typeName, ['lang_text', 'lang_textarea', 'lang_media'])) {
+            if (in_array($typeName, ['lang_text', 'lang_textarea', 'lang_media'], true)) {
                 $multilangFields[] = $field->getName();
             }
         }
-        
+
         return $multilangFields;
     }
 
     /**
-     * Prüfen ob ein Dataset vollständig übersetzt ist
+     * Prüfen ob ein Dataset vollständig übersetzt ist.
+     *
+     * @param list<int> $requiredLanguages
      */
     public function isFullyTranslatedFor(array $requiredLanguages): bool
     {
         $multilangFields = self::getMultilangFields($this->getTableName());
-        
+
         foreach ($multilangFields as $fieldName) {
             foreach ($requiredLanguages as $clangId) {
                 if (!$this->hasTranslationForLanguage($fieldName, $clangId)) {
@@ -194,41 +215,48 @@ class LangDataset extends rex_yform_manager_dataset
                 }
             }
         }
-        
+
         return true;
     }
 
     /**
-     * Übersetzungsstatus für alle Sprachen abrufen
+     * Übersetzungsstatus für alle Sprachen abrufen.
+     *
+     * @return array<int, array{language: rex_clang, translated_fields: int, total_fields: int, is_complete: bool, percentage: int}>
      */
     public function getTranslationStatus(): array
     {
         $multilangFields = self::getMultilangFields($this->getTableName());
+        $totalFields = count($multilangFields);
         $languages = LangHelper::getActiveLanguages();
         $status = [];
-        
+
         foreach ($languages as $lang) {
             $clangId = $lang->getId();
-            $status[$clangId] = [
-                'language' => $lang,
-                'translated_fields' => 0,
-                'total_fields' => count($multilangFields),
-                'is_complete' => true
-            ];
-            
+            $translated = 0;
+            $isComplete = true;
+
             foreach ($multilangFields as $fieldName) {
                 if ($this->hasTranslationForLanguage($fieldName, $clangId)) {
-                    $status[$clangId]['translated_fields']++;
+                    ++$translated;
                 } else {
-                    $status[$clangId]['is_complete'] = false;
+                    $isComplete = false;
                 }
             }
-            
-            $status[$clangId]['percentage'] = $status[$clangId]['total_fields'] > 0 
-                ? round(($status[$clangId]['translated_fields'] / $status[$clangId]['total_fields']) * 100)
+
+            $percentage = $totalFields > 0
+                ? (int) round(($translated / $totalFields) * 100)
                 : 100;
+
+            $status[$clangId] = [
+                'language' => $lang,
+                'translated_fields' => $translated,
+                'total_fields' => $totalFields,
+                'is_complete' => $isComplete,
+                'percentage' => $percentage,
+            ];
         }
-        
+
         return $status;
     }
 }

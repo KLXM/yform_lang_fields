@@ -1,5 +1,7 @@
 <?php
 
+/** @var rex_addon $this */
+
 // Autoloader für Namespace
 rex_autoload::addDirectory(rex_path::addon('yform_lang_fields', 'lib'));
 
