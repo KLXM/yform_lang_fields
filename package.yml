@@ -8,4 +8,4 @@ requires:
         yform: '>=4.0'
     redaxo: '^5.15'
     php:
-        version: '1.1.0'
+        version: '^8.1'
