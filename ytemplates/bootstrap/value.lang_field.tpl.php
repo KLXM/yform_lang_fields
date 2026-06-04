@@ -49,7 +49,7 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
     <?php endif; ?>
 
     <!-- Bestehende Übersetzungen -->
-    <div class="lang-fields-container" data-field-name="<?= rex_escape($field_name) ?>">
+    <div class="lang-fields-container" data-field-name="<?= rex_escape($field_name) ?>" data-writeassist="<?= $writeAssistActive ? '1' : '0' ?>">
         <?php foreach ($value as $index => $item): ?>
             <?php
             $clangId = (int) $item['clang_id'];

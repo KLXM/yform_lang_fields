@@ -94,7 +94,7 @@
             var inputId = fieldId + '_' + newIndex;
 
             // Create new field HTML
-            var hasTranslationActive = $btn.closest('.yform-lang-field').find('.btn-writeassist-translate').length > 0;
+            var hasTranslationActive = $container.find('.lang-fields-container').data('writeassist') === 1;
             var fieldHtml = this.generateFieldHtml({
                 hasTranslationActive: hasTranslationActive,
                 clangId: selectedLangId,
