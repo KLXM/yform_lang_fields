@@ -139,6 +139,101 @@
             }
         },
 
+        translateLanguageField: function($btn) {
+            var $item = $btn.closest('.lang-field-item');
+            var $container = $item.closest('.lang-fields-container');
+            
+            // Get the first lang-field item (which acts as source language)
+            var $sourceItem = $container.find('.lang-field-item').first();
+            if ($sourceItem.length === 0 || $sourceItem.get(0) === $item.get(0)) {
+                alert('Achtung: Dies ist die Primärsprache. Bitte öffnet für die Übersetzung einen der Zielsprachen-Tabs weiter unten und klickt dort auf übersetzen.');
+                return;
+            }
+            
+            // Get source value
+            var $sourceInput = $sourceItem.find('input[type="text"].lang-input, textarea');
+            if ($sourceInput.length === 0) return;
+            
+            var sourceText = $sourceInput.val();
+            var sourceId = $sourceInput.attr('id');
+            
+            // CKE5 check
+            if (typeof ckeditors !== 'undefined' && ckeditors[sourceId]) {
+                sourceText = ckeditors[sourceId].getData();
+            }
+            // TinyMCE check
+            else if (typeof tinymce !== 'undefined' && tinymce.get(sourceId)) {
+                sourceText = tinymce.get(sourceId).getContent();
+            }
+            
+            if (!sourceText || sourceText.trim() === '') {
+                alert('Das ursprüngliche Feld ist leer. Bitte zuerst einen Text in der primären Sprache eingeben!');
+                return;
+            }
+
+            var targetLang = $btn.data('target-lang') || 'EN';
+            var $targetInput = $item.find('input[type="text"].lang-input, textarea');
+            var targetId = $targetInput.attr('id');
+            var isHtml = false;
+            
+            if ($targetInput.is('textarea') && ($targetInput.hasClass('cke5-editor') || $targetInput.hasClass('tiny-editor') || $targetInput.hasClass('tinyMCEEditor') || typeof ckeditors !== 'undefined' || typeof tinymce !== 'undefined')) {
+                isHtml = true; // Use preserveFormatting
+            }
+            
+            var $icon = $btn.find('i');
+            var oldClass = $icon.attr('class');
+            $btn.prop('disabled', true);
+            $icon.attr('class', 'fa fa-spinner fa-spin text-muted');
+
+            var apiUrl = './index.php?rex-api-call=writeassist_translate';
+            
+            $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                data: {
+                    text: sourceText,
+                    target_lang: targetLang,
+                    preserve_formatting: isHtml ? 1 : 0
+                },
+                success: function(response) {
+                    if (response && response.success && response.translation) {
+                        // Apply result
+                        var trans = response.translation;
+                        
+                        // CKE5
+                        if (typeof ckeditors !== 'undefined' && ckeditors[targetId]) {
+                            ckeditors[targetId].setData(trans);
+                        }
+                        // TinyMCE
+                        else if (typeof tinymce !== 'undefined' && tinymce.get(targetId)) {
+                            tinymce.get(targetId).setContent(trans);
+                        }
+                        // Plain
+                        else {
+                            $targetInput.val(trans);
+                        }
+                        
+                        // Small success animation
+                        $icon.attr('class', 'fa fa-check text-success');
+                        setTimeout(function() {
+                            $icon.attr('class', oldClass);
+                        }, 2000);
+                    } else {
+                        alert('Übersetzung fehlgeschlagen oder leer.');
+                        $icon.attr('class', oldClass);
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Unbekannter Fehler bei der Übersetzung.';
+                    alert('Fehler: ' + errorMsg);
+                    $icon.attr('class', oldClass);
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
+                }
+            });
+        },
+
         removeLanguageField: function($btn) {
             var $fieldItem = $btn.closest('.lang-field-item');
             var $container = $btn.closest('.yform-lang-field');

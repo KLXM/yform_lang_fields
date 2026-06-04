@@ -69,7 +69,7 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
 
                     <!-- Aktionen oben rechts -->
                     <div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 5px; align-items: center;">
-                        <?php if ($writeAssistActive && ('text' === $field_type || 'textarea' === $field_type)): ?>
+                        <?php if ($writeAssistActive && ('text' === $field_type || 'textarea' === $field_type) && $index > 0): ?>
                             <button type="button"
                                     class="btn btn-default btn-xs btn-writeassist-translate"
                                     data-target-lang="<?= rex_escape(strtoupper(substr($clang->getCode(), 0, 2))) ?>"
