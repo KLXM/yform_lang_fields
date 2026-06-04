@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 - 2024-xx-xx (Aktuelles Release)
+### Hinzugefügt
+- **Übersetzungs-Check:** Im Sprach-Dropdown gibt es nun die Option "Fehlende hervorheben". Ist diese aktiv, werden Einträge, die nicht für alle im System *auf online geschalteten* Sprachen übersetzt sind, in der Listenansicht mit einem dezenten roten Indikator-Punkt versehen.
+
 ## 1.1.0 - 2024-xx-xx (Aktuelles Release)
 ### Hinzugefügt
 - **Sprachumschalter in der YForm-Listenansicht:** Über ein neues Dropdown in der Toolbar kann die angezeigte Sprache für alle Sprachfelder in der Liste live umgeschaltet werden.

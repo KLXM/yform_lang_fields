@@ -128,12 +128,17 @@ class LangHelper
      */
     public static function buildListPopover(array $parsed, string $mode = 'text', int $preferredClangId = 0): string
     {
+        $onlineClangs = rex_clang::getAll(true);
+        $totalOnline = count($onlineClangs);
+
         if (empty($parsed)) {
-            return '<span>-</span>';
+            $classes = $totalOnline > 0 ? 'ylf-list-entry ylf-is-incomplete' : 'ylf-list-entry';
+            return '<span class="' . $classes . '" data-ylf-default="0"><span>-</span></span>';
         }
 
         $spans = [];
         $firstNonEmpty = null;
+        $translatedOnlineCount = 0;
 
         foreach ($parsed as $item) {
             if (empty($item['value'])) {
@@ -161,6 +166,10 @@ class LangHelper
                 continue;
             }
 
+            if (isset($onlineClangs[$clangId])) {
+                $translatedOnlineCount++;
+            }
+
             if (null === $firstNonEmpty) {
                 $firstNonEmpty = $clangId;
             }
@@ -179,7 +188,13 @@ class LangHelper
         // data-ylf-default: statischer Fallback wenn kein JS / kein localStorage
         $default = $preferredClangId > 0 ? $preferredClangId : (int) $firstNonEmpty;
 
-        return '<span class="ylf-list-entry" data-ylf-default="' . $default . '">'
+        $isIncomplete = $translatedOnlineCount < $totalOnline;
+        $classes = 'ylf-list-entry';
+        if ($isIncomplete) {
+            $classes .= ' ylf-is-incomplete';
+        }
+
+        return '<span class="' . $classes . '" data-ylf-default="' . $default . '">'
             . implode('', $spans)
             . '</span>';
     }

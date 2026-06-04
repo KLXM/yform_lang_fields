@@ -612,8 +612,29 @@
                     + ' <small>' + self.escapeHtml(c.name) + '</small>'
                     + '</a></li>';
             }
+            var showIncomplete = localStorage.getItem('ylf_show_incomplete') === 'true';
+            var iconClass = showIncomplete ? 'fa-check-square-o' : 'fa-square-o';
+            menuHtml += '<li role="separator" class="divider"></li>';
+            menuHtml += '<li><a href="#" class="ylf-toggle-incomplete"><i class="fa fa-fw ' + iconClass + '"></i> <small>Fehlende hervorheben</small></a></li>';
             menuHtml += '</ul>';
             $group.append(menuHtml);
+
+            // Klick auf Incomplete Toggle
+            $group.on('click', '.ylf-toggle-incomplete', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var isEnabled = localStorage.getItem('ylf_show_incomplete') === 'true';
+                isEnabled = !isEnabled;
+                localStorage.setItem('ylf_show_incomplete', isEnabled ? 'true' : 'false');
+                
+                var $icon = $(this).find('.fa');
+                if (isEnabled) {
+                    $icon.removeClass('fa-square-o').addClass('fa-check-square-o');
+                } else {
+                    $icon.removeClass('fa-check-square-o').addClass('fa-square-o');
+                }
+                self.applyIncompleteHighlighting();
+            });
 
             // Klick auf Menüeintrag
             $group.on('click', 'a[data-ylf-switch]', function(e) {
@@ -634,6 +655,16 @@
 
             // Initiale Anzeige
             self.applyActiveLang(activeClang.id);
+            self.applyIncompleteHighlighting();
+        },
+
+        applyIncompleteHighlighting: function() {
+            var isEnabled = localStorage.getItem('ylf_show_incomplete') === 'true';
+            if (isEnabled) {
+                $('body').addClass('ylf-show-incomplete');
+            } else {
+                $('body').removeClass('ylf-show-incomplete');
+            }
         },
 
         /**

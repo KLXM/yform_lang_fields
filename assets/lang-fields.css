@@ -535,3 +535,20 @@ body.rex-theme-dark .yform-lang-field .lang-field-add-section .lang-select-new {
     color: inherit;
     border: 1px solid rgba(128, 128, 128, 0.2);
 }
+
+/* Highlight incomplete translations */
+body.ylf-show-incomplete .ylf-is-incomplete {
+    position: relative;
+}
+
+body.ylf-show-incomplete .ylf-is-incomplete::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: calc(50% - 3px);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #d9534f;
+    box-shadow: 0 0 4px rgba(217, 83, 79, 0.4);
+}
