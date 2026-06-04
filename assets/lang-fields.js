@@ -29,6 +29,48 @@
                 self.removeLanguageField($(this));
             });
 
+            // Collapse / Expand All
+            $(document).on('click', '.btn-collapse-all-lang', function(e) {
+                e.preventDefault();
+                var $container = $(this).closest('.yform-lang-field');
+                var $panels = $container.find('.lang-field-item');
+                var $icon = $(this).find('i');
+                
+                var isCollapsed = $icon.hasClass('fa-expand');
+                
+                if (isCollapsed) {
+                    $panels.find('.panel-body').slideDown(200);
+                    $panels.find('.ylf-collapse-icon').removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                    $panels.removeClass('ylf-is-collapsed');
+                    $icon.removeClass('fa-expand').addClass('fa-compress');
+                } else {
+                    $panels.find('.panel-body').slideUp(200);
+                    $panels.find('.ylf-collapse-icon').removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                    $panels.addClass('ylf-is-collapsed');
+                    $icon.removeClass('fa-compress').addClass('fa-expand');
+                }
+            });
+
+            // Toggle Panel Collapse
+            $(document).on('click', '.ylf-panel-heading', function(e) {
+                // Ignore if clicking on buttons or icons inside buttons
+                if ($(e.target).closest('button, a, input, select').length) return;
+                
+                var $panel = $(this).closest('.lang-field-item');
+                var $body = $panel.find('.panel-body');
+                var $icon = $(this).find('.ylf-collapse-icon');
+                
+                $body.slideToggle(200, function() {
+                    if ($body.is(':visible')) {
+                        $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                        $panel.removeClass('ylf-is-collapsed');
+                    } else {
+                        $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                        $panel.addClass('ylf-is-collapsed');
+                    }
+                });
+            });
+
             // Translate language field via WriteAssist
             $(document).on('click', '.btn-writeassist-translate', function(e) {
                 e.preventDefault();
@@ -324,7 +366,8 @@
             var html = '<div class="lang-field-item panel panel-default" data-clang-id="' + options.clangId + '" data-index="' + options.index + '" style="margin-bottom: 15px;">';
             
             // Panel Header mit Sprache und Delete-Button
-            html += '<div class="panel-heading" style="position: relative; padding-right: 50px;">';
+            html += '<div class="panel-heading ylf-panel-heading" style="position: relative; padding-right: 50px; cursor: pointer; user-select: none;">';
+            html += '<i class="fa-solid fa-chevron-down ylf-collapse-icon" style="margin-right: 8px; color: #aaa; width: 12px;"></i>';
             html += '<i class="fa-solid fa-flag" style="margin-right: 8px; color: #777;"></i>';
             html += '<strong>' + this.escapeHtml(options.langName) + '</strong> ';
             html += '<small class="text-muted">(' + this.escapeHtml(options.langCode) + ')</small>';

@@ -62,7 +62,8 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
             $itemValue = $item['value'] ?? '';
             ?>
             <div class="lang-field-item panel panel-default" data-clang-id="<?= $clangId ?>" style="margin-bottom: 15px;">
-                <div class="panel-heading" style="position: relative; padding-right: 50px;">
+                <div class="panel-heading ylf-panel-heading" style="position: relative; padding-right: 50px; cursor: pointer; user-select: none;">
+                    <i class="fa-solid fa-chevron-down ylf-collapse-icon" style="margin-right: 8px; color: #aaa; width: 12px;"></i>
                     <i class="fa-solid fa-flag" style="margin-right: 8px; color: #777;"></i>
                     <strong><?= rex_escape($clang->getName()) ?></strong>
                     <small class="text-muted">(<?= rex_escape($clang->getCode()) ?>)</small>
