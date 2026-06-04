@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 - 2024-06-04
+### Hinzugefügt
+- **WriteAssist KI-Integration:** YForm Lang Fields und das WriteAssist-AddOn sind nun ein Team! In den YForm-Feldeinstellungen lässt sich die KI-Übersetzung aktivieren. Anschließend erscheint in den Zielsprachen ein Button, mit dem der Text der Primärsprache via DeepL/OpenAI mit nur einem Klick automatisch übersetzt und eingefügt wird.
+- **Rich-Text Support:** Die Übersetzung übernimmt HTML-Formatierungen fehlerfrei, egal ob das Ziel ein nacktes Textfeld, TinyMCE oder CKE5 (Editor.js) ist.
+
+
 ## 1.1.1 - 2024-xx-xx (Aktuelles Release)
 ### Hinzugefügt
 - **Übersetzungs-Check:** Im Sprach-Dropdown gibt es nun die Option "Fehlende hervorheben". Ist diese aktiv, werden Einträge, die nicht für alle im System *auf online geschalteten* Sprachen übersetzt sind, in der Listenansicht mit einem dezenten roten Indikator-Punkt versehen.
