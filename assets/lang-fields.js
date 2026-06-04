@@ -94,7 +94,9 @@
             var inputId = fieldId + '_' + newIndex;
 
             // Create new field HTML
+            var hasTranslationActive = $btn.closest('.yform-lang-field').find('.btn-writeassist-translate').length > 0;
             var fieldHtml = this.generateFieldHtml({
+                hasTranslationActive: hasTranslationActive,
                 clangId: selectedLangId,
                 langName: langName,
                 langCode: langCode,
@@ -329,9 +331,7 @@
             
             html += '<div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 5px; align-items: center;">';
             // Nur Translation-Button einblenden, wenn im DOM das WriteAssist Feature generell aktiv ist
-            // Da wir JS sind (und nicht wissen obs in PHP angehakt war), prüfen wir einfach ob der erste Eintrag den Translate-Button überhaupt im Container hat.
-            var hasTranslationActive = $btn.closest('.yform-lang-field').find('.btn-writeassist-translate').length > 0;
-            if (hasTranslationActive && (options.fieldType === 'text' || options.fieldType === 'textarea')) {
+            if (options.hasTranslationActive && (options.fieldType === 'text' || options.fieldType === 'textarea')) {
                 var langCodeUpper = String(options.langCode).substring(0,2).toUpperCase();
                 html += '<button type="button" class="btn btn-default btn-xs btn-writeassist-translate" data-target-lang="' + langCodeUpper + '" title="Mit WriteAssist KI übersetzen">';
                 html += '<i class="fa fa-language text-primary"></i></button>';
