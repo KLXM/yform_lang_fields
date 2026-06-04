@@ -22,6 +22,8 @@ if ($required) {
 
 /** @var array<string, mixed> $parsed_attributes */
 $parsed_attributes = $parsed_attributes ?? []; // @phpstan-ignore-line fallback for older templates / manual calls
+$useWriteAssist = (bool) $this->getElement('use_writeassist');
+$writeAssistActive = $useWriteAssist && rex_addon::get('writeassist')->isAvailable();
 $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
 ?>
 
@@ -65,20 +67,29 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                     <strong><?= rex_escape($clang->getName()) ?></strong>
                     <small class="text-muted">(<?= rex_escape($clang->getCode()) ?>)</small>
 
-                    <!-- Delete Button oben rechts -->
-                    <?php if ($index > 0 || count($value) > 1): ?>
-                        <button type="button"
-                                class="btn btn-danger btn-xs btn-remove-lang-field"
-                                style="position: absolute; top: 8px; right: 10px;"
-                                title="Übersetzung entfernen">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    <?php else: ?>
-                        <span class="text-muted"
-                              style="position: absolute; top: 10px; right: 10px; font-size: 11px;">
-                            <i class="fa fa-lock"></i>
-                        </span>
-                    <?php endif; ?>
+                    <!-- Aktionen oben rechts -->
+                    <div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 5px; align-items: center;">
+                        <?php if ($writeAssistActive && ('text' === $field_type || 'textarea' === $field_type)): ?>
+                            <button type="button"
+                                    class="btn btn-default btn-xs btn-writeassist-translate"
+                                    data-target-lang="<?= rex_escape(strtoupper(str_replace('_', '-', $clang->getCode()))) ?>"
+                                    title="Mit WriteAssist KI übersetzen">
+                                <i class="fa fa-language text-primary"></i>
+                            </button>
+                        <?php endif; ?>
+                        
+                        <?php if ($index > 0 || count($value) > 1): ?>
+                            <button type="button"
+                                    class="btn btn-danger btn-xs btn-remove-lang-field"
+                                    title="Übersetzung entfernen">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        <?php else: ?>
+                            <span class="text-muted" style="font-size: 11px; padding: 0 4px;">
+                                <i class="fa fa-lock"></i>
+                            </span>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="panel-body">
                     <?php if ('text' === $field_type): ?>

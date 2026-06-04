@@ -29,6 +29,12 @@
                 self.removeLanguageField($(this));
             });
 
+            // Translate language field via WriteAssist
+            $(document).on('click', '.btn-writeassist-translate', function(e) {
+                e.preventDefault();
+                self.translateLanguageField($(this));
+            });
+
             // Language selection change
             $(document).on('change', '.lang-select-new', function() {
                 var $btn = $(this).closest('.lang-field-add-section').find('.btn-add-lang-field');
