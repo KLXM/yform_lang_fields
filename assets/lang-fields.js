@@ -43,11 +43,13 @@
                     $panels.find('.ylf-collapse-icon').removeClass('fa-chevron-right').addClass('fa-chevron-down');
                     $panels.removeClass('ylf-is-collapsed');
                     $icon.removeClass('fa-expand').addClass('fa-compress');
+                    $(this).html('<i class="fa fa-compress"></i> minimieren');
                 } else {
                     $panels.find('.panel-body').slideUp(200);
                     $panels.find('.ylf-collapse-icon').removeClass('fa-chevron-down').addClass('fa-chevron-right');
                     $panels.addClass('ylf-is-collapsed');
                     $icon.removeClass('fa-compress').addClass('fa-expand');
+                    $(this).html('<i class="fa fa-expand"></i> maximieren');
                 }
             });
 

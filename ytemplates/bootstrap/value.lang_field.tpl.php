@@ -29,12 +29,17 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
 
 <div class="form-group <?= $fieldClass ?>" id="<?= $this->getHTMLId() ?>">
 
-    <label class="control-label">
-        <?= rex_escape($label) ?>
-        <?php if ($required): ?>
-            <span class="text-danger">*</span>
-        <?php endif; ?>
-    </label>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px;">
+        <label class="control-label" style="margin-bottom: 0;">
+            <?= rex_escape($label) ?>
+            <?php if ($required): ?>
+                <span class="text-danger">*</span>
+            <?php endif; ?>
+        </label>
+        <button type="button" class="btn btn-default btn-xs btn-collapse-all-lang" title="Alle Sprachen minimieren / maximieren">
+            <i class="fa fa-compress"></i> minimieren
+        </button>
+    </div>
 
     <?php
     $description = $this->getElement('description');
