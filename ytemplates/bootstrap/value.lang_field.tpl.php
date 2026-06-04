@@ -72,7 +72,7 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                         <?php if ($writeAssistActive && ('text' === $field_type || 'textarea' === $field_type)): ?>
                             <button type="button"
                                     class="btn btn-default btn-xs btn-writeassist-translate"
-                                    data-target-lang="<?= rex_escape(strtoupper(str_replace('_', '-', $clang->getCode()))) ?>"
+                                    data-target-lang="<?= rex_escape(strtoupper(substr($clang->getCode(), 0, 2))) ?>"
                                     title="Mit WriteAssist KI übersetzen">
                                 <i class="fa fa-language text-primary"></i>
                             </button>
