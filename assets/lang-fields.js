@@ -326,10 +326,19 @@
             html += '<i class="fa-solid fa-flag" style="margin-right: 8px; color: #777;"></i>';
             html += '<strong>' + this.escapeHtml(options.langName) + '</strong> ';
             html += '<small class="text-muted">(' + this.escapeHtml(options.langCode) + ')</small>';
+            
+            html += '<div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 5px; align-items: center;">';
+            // Nur Translation-Button einblenden, wenn im DOM das WriteAssist Feature generell aktiv ist
+            // Da wir JS sind (und nicht wissen obs in PHP angehakt war), prüfen wir einfach ob der erste Eintrag den Translate-Button überhaupt im Container hat.
+            var hasTranslationActive = $btn.closest('.yform-lang-field').find('.btn-writeassist-translate').length > 0;
+            if (hasTranslationActive && (options.fieldType === 'text' || options.fieldType === 'textarea')) {
+                var langCodeUpper = String(options.langCode).substring(0,2).toUpperCase();
+                html += '<button type="button" class="btn btn-default btn-xs btn-writeassist-translate" data-target-lang="' + langCodeUpper + '" title="Mit WriteAssist KI übersetzen">';
+                html += '<i class="fa fa-language text-primary"></i></button>';
+            }
             html += '<button type="button" class="btn btn-danger btn-xs btn-remove-lang-field" ';
-            html += 'style="position: absolute; top: 8px; right: 10px;" title="Übersetzung entfernen">';
-            html += '<i class="fa fa-trash"></i></button>';
-            html += '</div>';
+            html += 'title="Übersetzung entfernen"><i class="fa fa-trash"></i></button>';
+            html += '</div></div>';
             
             // Panel Body mit dem Feld
             html += '<div class="panel-body">';
