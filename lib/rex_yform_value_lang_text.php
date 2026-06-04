@@ -170,20 +170,6 @@ class rex_yform_value_lang_text extends rex_yform_value_abstract
         }
 
         $parsed = LangHelper::normalizeLanguageData($value);
-        if (empty($parsed)) {
-            return '<span>-</span>';
-        }
-
-        $displayValues = [];
-        foreach ($parsed as $item) {
-            $itemValue = is_scalar($item['value']) ? (string) $item['value'] : '';
-            if ('' !== $itemValue) {
-                $clang = rex_clang::get($item['clang_id']);
-                $langCode = $clang ? $clang->getCode() : (string) $item['clang_id'];
-                $displayValues[] = $langCode . ': ' . rex_escape(mb_substr($itemValue, 0, 50));
-            }
-        }
-
-        return '<span>' . implode(' | ', $displayValues) . '</span>';
+        return LangHelper::buildListPopover($parsed, 'text', 0);
     }
 }

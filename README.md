@@ -1,11 +1,20 @@
 # YForm Lang Fields
 
-Mehrsprachige Felder für REDAXO YForm - Unterstützt einfache Text-, Textarea- und Media-Felder mit CKEditor 5 Integration.
+Mehrsprachige Felder für REDAXO YForm - Unterstützt einfache Text-, Textarea- und Media-Felder mit Editor-Integration (CKEditor 5, TinyMCE und weitere per Attributen).
+
+## Update-Hinweis
+
+Ab sofort wird die Editor-Auswahl bei lang_textarea ausschließlich über attributes gesteuert.
+Das Legacy-Flag editor wird nicht mehr ausgewertet.
+
+Migration:
+- Alt: 'editor' => true
+- Neu: attributes mit class, z. B. cke5-editor oder tiny-editor
 
 ## ✨ Features
 
 - **3 Feldtypen**: Text, Textarea und Media mit vollständiger Mehrsprachigkeit
-- **CKEditor 5 Integration**: GPL-konforme Editor-Integration für Textareas
+- **Editor-Unterstützung für Textareas**: CKEditor 5, TinyMCE und weitere Editoren über Attributübergabe
 - **REDAXO Mediapool**: Nahtlose Integration mit dem REDAXO Media-Widget
 - **Optionale Textfelder**: Zusätzliche Textfelder für Media (Alt-Text, Captions, etc.)
 - **Kompaktes MBlock-Design**: Moderne Panel-basierte UI mit Delete-Buttons im Header
@@ -44,7 +53,7 @@ $yform->setValueField('lang_text', [
 
 ### 2. Lang Textarea (`lang_textarea`)
 
-Mehrsprachiges mehrzeiliges Textfeld mit optionalem CKEditor 5.
+Mehrsprachiges mehrzeiliges Textfeld mit Attribut-basierter Editor-Integration.
 
 **Ohne Editor:**
 ```php
@@ -61,11 +70,32 @@ $yform->setValueField('lang_textarea', [
 $yform->setValueField('lang_textarea', [
     'name' => 'content',
     'label' => 'Inhalt',
-    'editor' => true,
     'rows' => 10,
-    'attributes' => json_encode(['class' => 'cke5-editor'])
+    'attributes' => json_encode([
+        'class' => 'cke5-editor',
+        'profile' => 'default',   // Alias für data-profile
+        'lang' => 'de'            // Alias für data-lang (optional)
+    ])
 ]);
 ```
+
+**Mit TinyMCE:**
+```php
+$yform->setValueField('lang_textarea', [
+    'name' => 'content',
+    'label' => 'Inhalt',
+    'rows' => 10,
+    'attributes' => json_encode([
+        'class' => 'tiny-editor', // alternativ: tinyMCEEditor
+        'profile' => 'default'
+    ])
+]);
+```
+
+Hinweis zu Attributen:
+- `profile` wird automatisch auf `data-profile` gemappt.
+- `lang` wird automatisch auf `data-lang` gemappt.
+- Eigene Attribute werden beim Rendern und beim dynamischen Hinzufügen weiterer Sprachen übernommen.
 
 ### 3. Lang Media (`lang_media`)
 
@@ -116,11 +146,14 @@ $yform->setValueField('lang_text', [
     'description' => 'Der Seitentitel'
 ]);
 
-// Textarea mit CKEditor
+// Textarea mit CKEditor 5 (Attribut-basiert)
 $yform->setValueField('lang_textarea', [
     'name' => 'content',
     'label' => 'Inhalt',
-    'editor' => true
+    'attributes' => json_encode([
+        'class' => 'cke5-editor',
+        'profile' => 'default'
+    ])
 ]);
 
 // Media mit Textfeld
@@ -149,14 +182,15 @@ $yform->setValueField('lang_media', [
 | Parameter | Typ | Standard | Beschreibung |
 |-----------|-----|----------|--------------|
 | `attributes` | json | '' | Zusätzliche HTML-Attribute |
+| `list_lang` | int | '' | Sprach-ID für Listenspalte (leer = erste gespeicherte Übersetzung) |
 
 ### Lang Textarea Parameter
 
 | Parameter | Typ | Standard | Beschreibung |
 |-----------|-----|----------|--------------|
 | `rows` | int | 5 | Anzahl der Zeilen |
-| `editor` | bool | false | CKEditor 5 aktivieren |
-| `attributes` | json | '' | Zusätzliche HTML-Attribute |
+| `attributes` | json | '' | Zusätzliche HTML-Attribute inkl. Editorsteuerung (`class`, optional `profile`, optional `lang`) |
+| `list_lang` | int | '' | Sprach-ID für Listenspalte (leer = erste gespeicherte Übersetzung) |
 
 ### Lang Media Parameter
 
@@ -167,6 +201,23 @@ $yform->setValueField('lang_media', [
 | `preview` | bool | true | Bildvorschau anzeigen |
 | `with_text` | bool | false | Zusätzliches Textfeld aktivieren |
 | `text_label` | string | 'Beschreibung' | Label für Textfeld |
+| `list_lang` | int | '' | Sprach-ID für Listenspalte (leer = erste gespeicherte Übersetzung) |
+
+## 🗂️ Listenansicht
+
+In der YForm-Datensätzeliste wird je Sprachfeld der erste (oder konfigurierte) Sprachenwert gekürzt angezeigt.
+Zusätzliche Übersetzungen erscheinen als kleiner Badge (z. B. `+2`), der beim Hovern/Fokussieren ein Popover ohne Layout-Sprung einblendet.
+
+**Anzeigesprache fest setzen** (z. B. immer Deutsch zuerst):
+```php
+$yform->setValueField('lang_text', [
+    'name'      => 'title',
+    'label'     => 'Titel',
+    'list_lang' => 1   // Sprach-ID aus REDAXO System > Sprachen
+]);
+```
+
+Ohne `list_lang` wird die erste im Datensatz gespeicherte Übersetzung angezeigt.
 
 ## 📚 Beispiele
 
@@ -192,12 +243,15 @@ $yform->setValueField('lang_textarea', [
     'description' => 'Kurze Zusammenfassung'
 ]);
 
-// Hauptinhalt mit Editor
+// Hauptinhalt mit TinyMCE (Attribut-basiert)
 $yform->setValueField('lang_textarea', [
     'name' => 'content',
     'label' => 'Inhalt',
-    'editor' => true,
-    'rows' => 15
+    'rows' => 15,
+    'attributes' => json_encode([
+        'class' => 'tiny-editor',
+        'profile' => 'default'
+    ])
 ]);
 
 // Titelbild mit Alt-Text

@@ -9,6 +9,8 @@
  * @var string                                          $attributes
  * @var string                                          $notice
  * @var bool                                            $required
+ * @var array<string, scalar>                           $parsed_attributes
+ * @var string                                          $editor_type
  * @var list<rex_clang>                                 $available_languages
  * @var array<int, rex_clang>                           $all_languages
  */
@@ -19,8 +21,8 @@ if ($required) {
 }
 
 /** @var array<string, mixed> $parsed_attributes */
-$parsed_attributes = isset($parsed_attributes) && is_array($parsed_attributes) ? $parsed_attributes : [];
-$use_editor = isset($use_editor) ? (bool) $use_editor : false;
+$parsed_attributes = $parsed_attributes ?? []; // @phpstan-ignore-line fallback for older templates / manual calls
+$editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
 ?>
 
 <div class="form-group <?= $fieldClass ?>" id="<?= $this->getHTMLId() ?>">
@@ -92,38 +94,28 @@ $use_editor = isset($use_editor) ? (bool) $use_editor : false;
                     <?php elseif ('textarea' === $field_type): ?>
                         <?php
                         $rows = isset($parsed_attributes['rows']) && is_scalar($parsed_attributes['rows']) ? (string) $parsed_attributes['rows'] : '5';
-                        $useEditor = $use_editor;
-                        $textareaClass = 'form-control lang-textarea';
+                        $textareaClass = isset($parsed_attributes['class']) && is_scalar($parsed_attributes['class'])
+                            ? trim((string) $parsed_attributes['class'])
+                            : 'form-control lang-textarea';
 
-                        // Parse attributes JSON if present
-                        $attributesJson = $this->getElement('attributes');
-                        $parsedAttributes = [];
-                        if (is_string($attributesJson) && '' !== $attributesJson) {
-                            $decoded = json_decode($attributesJson, true);
-                            if (is_array($decoded)) {
-                                $parsedAttributes = $decoded;
-                                if (isset($parsedAttributes['class']) && is_string($parsedAttributes['class'])) {
-                                    $textareaClass = $parsedAttributes['class'];
-                                    unset($parsedAttributes['class']);
-                                }
-                            }
-                        }
+                        /** @var array<string, scalar> $textareaAttributes */
+                        $textareaAttributes = $parsed_attributes;
+                        unset($textareaAttributes['class'], $textareaAttributes['rows']);
 
-                        // Check if CKE5 is requested via class or editor flag
-                        $hasCke5Class = isset($parsed_attributes['class']) && is_string($parsed_attributes['class']) && false !== strpos($parsed_attributes['class'], 'cke5');
-                        if ($useEditor || $hasCke5Class) {
+                        if ('cke5' === $editor_type) {
                             if (false === strpos($textareaClass, 'cke5-editor')) {
                                 $textareaClass .= ' cke5-editor';
                             }
-                            if (!isset($parsedAttributes['data-lang'])) {
-                                $parsedAttributes['data-lang'] = $clang->getCode();
+
+                            if (!isset($textareaAttributes['data-lang'])) {
+                                $textareaAttributes['data-lang'] = $clang->getCode();
                             }
                         }
 
                         // Build attribute string
                         $attributeString = '';
-                        foreach ($parsedAttributes as $attr => $attrValue) {
-                            if (!is_scalar($attrValue)) {
+                        foreach ($textareaAttributes as $attr => $attrValue) {
+                            if (!is_scalar($attrValue)) { // @phpstan-ignore-line
                                 continue;
                             }
                             $attributeString .= ' ' . rex_escape((string) $attr) . '="' . rex_escape((string) $attrValue) . '"';
@@ -226,8 +218,6 @@ $use_editor = isset($use_editor) ? (bool) $use_editor : false;
     $showAddSection = count($available_languages) > 0;
     $addSectionStyle = $showAddSection ? '' : ' style="display: none;"';
 
-    $editorElem = $this->getElement('editor');
-    $editorEnabled = ($use_editor || (false !== $editorElem && (bool) $editorElem)) ? '1' : '0';
     $previewElem2 = $this->getElement('preview');
     $previewEnabled = (false === $previewElem2 ? true : (bool) $previewElem2) ? '1' : '0';
     $withTextElem = $this->getElement('with_text');
@@ -266,9 +256,9 @@ $use_editor = isset($use_editor) ? (bool) $use_editor : false;
                                 data-field-id="<?= rex_escape($field_id) ?>"
                                 data-field-id-value="<?= $this->getId() ?>"
                                 data-form-name="<?= rex_escape($this->params['form_name']) ?>"
-                                data-attributes=""
+                                data-attributes="<?= rex_escape((string) json_encode($parsed_attributes, JSON_UNESCAPED_UNICODE)) ?>"
                                 data-rows="<?= rex_escape($rowsData) ?>"
-                                data-editor="<?= $editorEnabled ?>"
+                                data-editor-type="<?= rex_escape($editor_type) ?>"
                                 data-types="<?= rex_escape($typesData) ?>"
                                 data-category="<?= rex_escape($categoryData) ?>"
                                 data-preview="<?= $previewEnabled ?>"

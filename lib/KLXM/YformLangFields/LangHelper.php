@@ -114,6 +114,95 @@ class LangHelper
     }
 
     /**
+     * Baut die HTML-Ausgabe für YForm-Listenansichten von Sprachfeldern.
+     *
+     * Zeigt den ersten Sprachenwert gekürzt an; weitere Sprachen werden
+     * als Bootstrap-Popover (Hover) ohne Layout-Sprünge eingeblendet.
+     *
+     * Rendert ALLE Sprachen als datenbewusste Spans; welche sichtbar ist,
+     * steuert JS anhand des localStorage-Werts `ylf_active_clang`.
+     * $preferredClangId dient als CSS-only-Fallback ohne JS.
+     *
+     * @param list<array{clang_id: int, value: mixed}> $parsed
+     * @param 'text'|'media' $mode 'text' für Text/Textarea, 'media' für Media-Felder
+     */
+    public static function buildListPopover(array $parsed, string $mode = 'text', int $preferredClangId = 0): string
+    {
+        if (empty($parsed)) {
+            return '<span>-</span>';
+        }
+
+        $spans = [];
+        $firstNonEmpty = null;
+
+        foreach ($parsed as $item) {
+            if (empty($item['value'])) {
+                continue;
+            }
+
+            $clangId = (int) $item['clang_id'];
+            $clang = rex_clang::get($clangId);
+            $code = rex_escape($clang ? mb_strtoupper($clang->getCode()) : (string) $clangId);
+
+            if ('media' === $mode) {
+                if (is_array($item['value'])) {
+                    $text = isset($item['value']['media']) && is_scalar($item['value']['media'])
+                        ? rex_escape((string) $item['value']['media'])
+                        : '';
+                } else {
+                    $text = rex_escape((string) $item['value']);
+                }
+            } else {
+                $raw = is_scalar($item['value']) ? strip_tags((string) $item['value']) : '';
+                $text = rex_escape(mb_substr($raw, 0, 60)) . (mb_strlen($raw) > 60 ? '…' : '');
+            }
+
+            if ('' === $text) {
+                continue;
+            }
+
+            if (null === $firstNonEmpty) {
+                $firstNonEmpty = $clangId;
+            }
+
+            // data-ylf-clang wird von JS genutzt; CSS blendet alle außer der aktiven aus
+            $spans[] = '<span class="ylf-list-clang" data-ylf-clang="' . $clangId . '">'
+                . '<span class="ylf-list-code">' . $code . '</span>&nbsp;'
+                . '<span class="ylf-list-val">' . $text . '</span>'
+                . '</span>';
+        }
+
+        if (empty($spans)) {
+            return '<span>-</span>';
+        }
+
+        // data-ylf-default: statischer Fallback wenn kein JS / kein localStorage
+        $default = $preferredClangId > 0 ? $preferredClangId : (int) $firstNonEmpty;
+
+        return '<span class="ylf-list-entry" data-ylf-default="' . $default . '">'
+            . implode('', $spans)
+            . '</span>';
+    }
+
+    /**
+     * Gibt zurück ob eine Tabelle mindestens ein lang_*-Feld besitzt.
+     *
+     * @param array<mixed> $fields YForm-Felder der Tabelle
+     */
+    public static function tableHasLangFields(array $fields): bool
+    {
+        foreach ($fields as $field) {
+            if ($field instanceof \rex_yform_manager_field) {
+                $type = $field->getTypeName();
+                if (in_array($type, ['lang_text', 'lang_textarea', 'lang_media'], true)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Verfügbare Sprachen für neue Übersetzungen.
      *
      * @param mixed $existingData
@@ -134,5 +223,32 @@ class LangHelper
         }
 
         return $available;
+    }
+
+    /**
+     * Resolves a language ID from string or int (support 'en', 'de', 1, 2)
+     */
+    /** @param mixed $input */
+    public static function resolveClangId($input): int
+    {
+        if (is_numeric($input)) {
+            $id = (int) $input;
+            if ($id > 0 && 
+rex_clang::exists($id)) {
+                return $id;
+            }
+            return 0;
+        }
+
+        if (is_string($input) && $input !== '') {
+            $code = strtolower(trim($input));
+            foreach (
+rex_clang::getAll() as $clang) {
+                if (strtolower($clang->getCode()) === $code) {
+                    return $clang->getId();
+                }
+            }
+        }
+        return 0;
     }
 }

@@ -1,6 +1,210 @@
 /* YForm Lang Fields - kompaktes MBlock-aehnliches Layout mit Dark-Mode-Support */
 
 /* ============================================================
+   Listenwert: erster Sprachenwert + Popover-Badge für weitere
+   ============================================================ */
+.ylf-list-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+}
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+.ylf-list-val {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+}
+.ylf-list-more {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #e0e8f0;
+    color: #336;
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid #c8d8e8;
+    flex-shrink: 0;
+}
+.ylf-list-more:hover,
+.ylf-list-more:focus {
+    background: #c8d8e8;
+    outline: none;
+}
+body.rex-theme-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+body.rex-theme-dark .ylf-list-more {
+    background: #2a3a4a;
+    color: #9bc;
+    border-color: #3a4a5a;
+}
+body.rex-theme-dark .ylf-list-more:hover,
+body.rex-theme-dark .ylf-list-more:focus {
+    background: #3a4a5a;
+}
+@media (prefers-color-scheme: dark) {
+    body.rex-has-theme:not(.rex-theme-light) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+    body.rex-has-theme:not(.rex-theme-light) .ylf-list-more {
+        background: #2a3a4a;
+        color: #9bc;
+        border-color: #3a4a5a;
+    }
+    body.rex-has-theme:not(.rex-theme-light) .ylf-list-more:hover,
+    body.rex-has-theme:not(.rex-theme-light) .ylf-list-more:focus {
+        /* YForm Lang Fields - kompaktes MBlock-aehnliches Layout mit Dark-Mode-Support */
+
+        /* ============================================================
+           Listenwert: Sprach-Spans mit JS-gesteuerter Sichtbarkeit
+           ============================================================ */
+        .ylf-list-entry {
+            display: inline-block;
+            max-width: 100%;
+        }
+        .ylf-list-clang {
+            display: none; /* JS blendet den aktiven ein; ohne JS zeigt CSS den Default */
+        }
+        /* Fallback ohne JS: ersten Span per CSS sichtbar machen */
+        .ylf-list-entry .ylf-list-clang:first-child {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        /* Wenn JS aktiv war (Klasse wird per JS gesetzt), übernimmt JS komplett */
+        .ylf-list-entry.ylf-js-active .ylf-list-clang:first-child {
+            display: none;
+        }
+        {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+        .ylf-list-val {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 220px;
+        }
+        body.rex-theme-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+        @media (prefers-color-scheme: dark) {
+            body.rex-has-theme:not(.rex-theme-light) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+        }
+
+        /* ============================================================
+           Sprachswitch-Dropdown (QuickNavigation-Stil)
+           ============================================================ */
+        .ylf-clang-dropdown {
+            vertical-align: middle;
+        }
+        .ylf-clang-switch-trigger {
+            font-size: 12px;
+        }
+        .ylf-clang-badge {
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+        .ylf-clang-menu {
+            min-width: 160px;
+        }
+        .ylf-clang-menu .ylf-clang-current > a {
+            font-weight: 700;
+            color: #337ab7;
+        }
+        body.rex-theme-dark .ylf-clang-menu .ylf-clang-current > a {
+            color: #7ab4e0;
+        }
+        @media (prefers-color-scheme: dark) {
+            body.rex-has-theme:not(.rex-theme-light) .ylf-clang-menu .ylf-clang-current > a {
+                color: #7ab4e0;
+            }
+        }
+        background: #3a4a5a;
+    }
+}
+
+/* ============================================================
    1) Light Defaults (component scope)
    ============================================================ */
 .yform-lang-field {
@@ -313,4 +517,21 @@ body.rex-theme-dark .yform-lang-field .lang-field-add-section .lang-select-new {
 /* Zusaetzliches Textfeld bei Media */
 .yform-lang-field .lang-field-item .panel-body input[type="text"] + input[type="text"] {
     margin-top: 10px;
+}
+
+/* Language Code Label in YForm List */
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3em 0.4em 0.2em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25em;
+    background-color: rgba(128, 128, 128, 0.15);
+    color: inherit;
+    border: 1px solid rgba(128, 128, 128, 0.2);
 }

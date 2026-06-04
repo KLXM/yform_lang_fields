@@ -103,36 +103,16 @@ class rex_yform_value_lang_textarea extends rex_yform_value_abstract
             ];
         }
 
-        // Attribute parsen für CKE5 Support
         $attributes = $this->getElement('attributes');
         $attributes = is_string($attributes) ? $attributes : '';
-        $parsedAttributes = [];
 
-        if ('' !== $attributes) {
-            if (0 === strpos($attributes, '{')) {
-                $decoded = json_decode($attributes, true);
-                $parsedAttributes = is_array($decoded) ? $decoded : [];
-            } elseif (preg_match_all('/([^=\s]+)="([^"]*)"|([^=\s]+)=([^\s]+)/', $attributes, $matches, PREG_SET_ORDER)) {
-                foreach ($matches as $match) {
-                    $quotedKey = $match[1] ?? '';
-                    if ('' !== $quotedKey) {
-                        $parsedAttributes[$quotedKey] = $match[2] ?? '';
-                    } else {
-                        $bareKey = $match[3] ?? '';
-                        if ('' !== $bareKey) {
-                            $parsedAttributes[$bareKey] = $match[4] ?? '';
-                        }
-                    }
-                }
-            }
-        }
+        $parsedAttributes = $this->normalizeAttributeAliases($this->parseFieldAttributes($attributes));
 
-        // Standardwerte setzen
-        if (!isset($parsedAttributes['rows'])) {
+        if (!isset($parsedAttributes['rows'])) { // @phpstan-ignore-line
             $parsedAttributes['rows'] = '5';
         }
 
-        $useEditor = isset($parsedAttributes['class']) && is_string($parsedAttributes['class']) && false !== strpos($parsedAttributes['class'], 'cke5');
+        $editorType = $this->detectEditorType($parsedAttributes);
 
         return [
             'field' => $this,
@@ -148,8 +128,92 @@ class rex_yform_value_lang_textarea extends rex_yform_value_abstract
             'available_languages' => LangHelper::getAvailableLanguages($value),
             'all_languages' => LangHelper::getActiveLanguages(),
             'first_language_id' => null !== $firstLang ? $firstLang->getId() : 1,
-            'use_editor' => $useEditor,
+            'editor_type' => $editorType,
         ];
+    }
+
+    /**
+     * @return array<string, scalar>
+     */
+    private function parseFieldAttributes(string $attributes): array
+    {
+        $attributes = trim($attributes);
+        if ('' === $attributes) {
+            return [];
+        }
+
+        if ('{' === $attributes[0]) {
+            $decoded = json_decode($attributes, true);
+            if (is_array($decoded)) {
+                $parsed = [];
+                foreach ($decoded as $key => $value) {
+                    if (!is_string($key) || '' === $key || !is_scalar($value)) {
+                        continue;
+                    }
+                    $parsed[$key] = $value;
+                }
+
+                return $parsed;
+            }
+        }
+
+        $parsed = [];
+        if (preg_match_all('/([^=\s]+)="([^"]*)"|([^=\s]+)=([^\s]+)/', $attributes, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $quotedKey = $match[1] ?? '';
+                if ('' !== $quotedKey) {
+                    $parsed[$quotedKey] = $match[2] ?? '';
+                    continue;
+                }
+
+                $bareKey = $match[3] ?? '';
+                if ('' !== $bareKey) {
+                    $parsed[$bareKey] = $match[4] ?? '';
+                }
+            }
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * @param array<string, scalar> $attributes
+     *
+     * @return array<string, scalar>
+     */
+    private function normalizeAttributeAliases(array $attributes): array
+    {
+        if (isset($attributes['profile']) && !isset($attributes['data-profile'])) {
+            $attributes['data-profile'] = $attributes['profile'];
+            unset($attributes['profile']);
+        }
+
+        if (isset($attributes['lang']) && !isset($attributes['data-lang'])) {
+            $attributes['data-lang'] = $attributes['lang'];
+            unset($attributes['lang']);
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param array<string, scalar> $attributes
+     */
+    private function detectEditorType(array $attributes): string
+    {
+        $classValue = isset($attributes['class']) // @phpstan-ignore-line
+            ? strtolower((string) $attributes['class'])
+            : '';
+
+        if (false !== strpos($classValue, 'cke5-editor') || false !== strpos($classValue, ' cke5') || 0 === strpos($classValue, 'cke5')) {
+            return 'cke5';
+        }
+
+        if (false !== strpos($classValue, 'tiny-editor') || false !== strpos($classValue, 'tinymceeditor')) {
+            return 'tinymce';
+        }
+
+        return 'none';
     }
 
     /**
@@ -203,20 +267,6 @@ class rex_yform_value_lang_textarea extends rex_yform_value_abstract
         }
 
         $parsed = LangHelper::normalizeLanguageData($value);
-        if (empty($parsed)) {
-            return '<span>-</span>';
-        }
-
-        $displayValues = [];
-        foreach ($parsed as $item) {
-            $itemValue = is_scalar($item['value']) ? (string) $item['value'] : '';
-            if ('' !== $itemValue) {
-                $clang = rex_clang::get($item['clang_id']);
-                $langCode = $clang ? $clang->getCode() : (string) $item['clang_id'];
-                $displayValues[] = $langCode . ': ' . rex_escape(mb_substr($itemValue, 0, 50));
-            }
-        }
-
-        return '<span>' . implode(' | ', $displayValues) . '</span>';
+        return LangHelper::buildListPopover($parsed, 'text', 0);
     }
 }

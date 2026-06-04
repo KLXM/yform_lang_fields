@@ -73,10 +73,11 @@
             var langCode = $selectedOption.data('code');
             var fieldType = $btn.data('field-type');
             var fieldId = $btn.data('field-id');
-            var attributes = $btn.data('attributes') || '';
+            var attributesMap = this.parseAttributesData($btn.attr('data-attributes'));
             var description = $btn.data('description') || '';
             var withText = ($btn.data('with-text') === '1' || $btn.data('with-text') === 1 || $btn.data('with-text') === true);
             var textLabel = $btn.data('text-label') || 'Beschreibung';
+            var editorType = String($btn.data('editor-type') || 'none').toLowerCase();
             
             console.log('Button data-with-text:', $btn.data('with-text'), 'Converted to boolean:', withText);
 
@@ -94,10 +95,10 @@
                 fieldType: fieldType,
                 inputName: inputName,
                 inputId: inputId,
-                attributes: attributes,
+                attributesMap: attributesMap,
                 index: newIndex,
                 rows: $btn.data('rows') || 5,
-                useEditor: $btn.data('editor') === '1' || $btn.data('editor') === 1,
+                editorType: editorType,
                 types: $btn.data('types') || '',
                 category: $btn.data('category') || '',
                 description: description,
@@ -117,8 +118,8 @@
             // Update add section status
             this.toggleAddSection($container);
 
-            // Initialize CKE5 for new field IMMEDIATELY
-            this.initCKE5ForNewField($newField);
+            // Initialize configured rich-text editors for the new field.
+            this.initEditorsForNewField($newField, editorType);
 
             // Update delete buttons
             var $items = $container.find('.lang-field-item');
@@ -233,25 +234,52 @@
             html += '<div class="panel-body">';
             
             if (options.fieldType === 'text') {
+                var textAttrs = this.cloneAttributes(options.attributesMap || {});
+                var textClass = textAttrs['class'] || 'form-control lang-input';
+                delete textAttrs['class'];
+                delete textAttrs['rows'];
+                var textAttributeString = this.buildAttributeString(textAttrs);
+
                 html += '<input type="text" name="' + options.inputName + '[value]" id="' + options.inputId + '" ';
-                html += 'class="form-control lang-input" value="" ' + options.attributes + ' ';
+                html += 'class="' + this.escapeHtml(textClass) + '" value="" ' + textAttributeString + ' ';
                 html += 'data-clang-id="' + options.clangId + '" placeholder="' + this.escapeHtml(options.langName) + '" />';
                 html += '<input type="hidden" name="' + options.inputName + '[clang_id]" value="' + options.clangId + '" />';
             } else if (options.fieldType === 'textarea') {
-                var textareaClass = 'form-control lang-textarea';
-
-                if (options.useEditor) {
-                    textareaClass += ' cke5-editor';
+                var attrs = this.cloneAttributes(options.attributesMap || {});
+                if (attrs.profile && !attrs['data-profile']) {
+                    attrs['data-profile'] = attrs.profile;
+                    delete attrs.profile;
                 }
+                if (attrs.lang && !attrs['data-lang']) {
+                    attrs['data-lang'] = attrs.lang;
+                    delete attrs.lang;
+                }
+
+                var textareaRows = attrs.rows || options.rows || 5;
+                delete attrs.rows;
+
+                var textareaClass = attrs['class'] || 'form-control lang-textarea';
+                delete attrs['class'];
+
+                if (options.editorType === 'cke5') {
+                    if (textareaClass.indexOf('cke5-editor') === -1) {
+                        textareaClass += ' cke5-editor';
+                    }
+                    if (!attrs['data-lang']) {
+                        attrs['data-lang'] = options.langCode;
+                    }
+                }
+
+                if (options.editorType === 'tinymce') {
+                    if (textareaClass.indexOf('tiny-editor') === -1 && textareaClass.indexOf('tinyMCEEditor') === -1) {
+                        textareaClass += ' tiny-editor';
+                    }
+                }
+
+                var attributeString = this.buildAttributeString(attrs);
 
                 html += '<textarea name="' + options.inputName + '[value]" id="' + options.inputId + '" ';
-                html += 'class="' + textareaClass + '" rows="' + options.rows + '" ' + options.attributes + ' ';
-                
-                // CKE5-spezifische Daten-Attribute hinzufügen
-                if (options.useEditor) {
-                    html += 'data-profile="default" data-lang="' + this.escapeHtml(options.langCode) + '" ';
-                }
-                
+                html += 'class="' + this.escapeHtml(textareaClass) + '" rows="' + this.escapeHtml(String(textareaRows)) + '" ' + attributeString + ' ';
                 html += 'data-clang-id="' + options.clangId + '"></textarea>';
                 html += '<input type="hidden" name="' + options.inputName + '[clang_id]" value="' + options.clangId + '" />';
             } else if (options.fieldType === 'media') {
@@ -352,6 +380,47 @@
             return div.innerHTML;
         },
 
+        parseAttributesData: function(rawAttributes) {
+            if (!rawAttributes || typeof rawAttributes !== 'string') {
+                return {};
+            }
+
+            try {
+                var parsed = JSON.parse(rawAttributes);
+                if (parsed && typeof parsed === 'object') {
+                    return parsed;
+                }
+            } catch (e) {
+                // Ignore malformed attributes and keep defaults.
+            }
+
+            return {};
+        },
+
+        cloneAttributes: function(attributes) {
+            if (!attributes || typeof attributes !== 'object') {
+                return {};
+            }
+
+            return Object.assign({}, attributes);
+        },
+
+        buildAttributeString: function(attributes) {
+            var self = this;
+            var html = '';
+
+            Object.keys(attributes).forEach(function(key) {
+                var value = attributes[key];
+                if (value === null || value === undefined) {
+                    return;
+                }
+
+                html += ' ' + self.escapeHtml(String(key)) + '="' + self.escapeHtml(String(value)) + '"';
+            });
+
+            return html;
+        },
+
         toggleAddSection: function($container) {
             var $addSection = $container.find('.lang-field-add-section');
             if ($addSection.length === 0) return;
@@ -373,7 +442,6 @@
 
         // CKE5-Initialisierung für neue Felder
         initCKE5ForNewField: function($field) {
-            var self = this;
             var $textareas = $field.find('textarea.cke5-editor');
             console.log('YForm Lang: Initialisiere CKE5 für', $textareas.length, 'neue Textareas');
             
@@ -410,6 +478,202 @@
             }
         },
 
+        initTinyMceForNewField: function($field) {
+            var $textareas = $field.find('textarea.tiny-editor, textarea.tinyMCEEditor');
+            if ($textareas.length === 0) {
+                return;
+            }
+
+            if (typeof tiny_init === 'function') {
+                tiny_init($field.closest('.yform-lang-field'));
+            }
+        },
+
+        initEditorsForNewField: function($field, editorType) {
+            var normalizedType = String(editorType || 'none').toLowerCase();
+
+            if (normalizedType === 'cke5') {
+                this.initCKE5ForNewField($field);
+                return;
+            }
+
+            if (normalizedType === 'tinymce') {
+                this.initTinyMceForNewField($field);
+                return;
+            }
+
+            // Fallback: auto-detect by classes for unknown/legacy configurations.
+            if ($field.find('textarea.cke5-editor').length > 0) {
+                this.initCKE5ForNewField($field);
+            }
+            if ($field.find('textarea.tiny-editor, textarea.tinyMCEEditor').length > 0) {
+                this.initTinyMceForNewField($field);
+            }
+        },
+
+        // Popover für zusätzliche Sprachen in der YForm-Listenansicht initialisieren
+        initListPopovers: function() {
+            var $badges = $('[data-bs-toggle="popover"].ylf-list-more');
+            if ($badges.length === 0) {
+                return;
+            }
+
+            // Bootstrap 5
+            if (typeof bootstrap !== 'undefined' && bootstrap.Popover) {
+                $badges.each(function() {
+                    new bootstrap.Popover(this, { sanitize: false });
+                });
+                return;
+            }
+
+            // Bootstrap 3/4 via jQuery
+            if (typeof $.fn.popover === 'function') {
+                $badges.popover({ html: true, trigger: 'hover focus', container: 'body' });
+            }
+        },
+        /**
+         * Sprachswitch für YForm-Listenansicht.
+         *
+         * - Liest localStorage('ylf_active_clang') zum Bestimmen der angezeigten Sprache.
+         * - Wandelt den vom EP eingefügten Trigger-Button (.ylf-clang-switch-trigger)
+         *   in ein Bootstrap-Dropdown-Menü à la QuickNavigation um.
+         * - Blendet beim Klick auf eine Sprache alle .ylf-list-clang-Spans aus und
+         *   zeigt nur den gewählten an; schreibt in localStorage.
+         */
+        initLangSwitch: function() {
+            var self = this;
+            var $trigger = $('#ylf-clang-switch-trigger');
+
+            if ($trigger.length === 0) {
+                // Kein Trigger-Button → Tabelle hat keine Lang-Felder oder
+                // wir befinden uns nicht auf einer Listenseite.
+                // Dennoch: aktive Sprache auf bestehende Spans anwenden.
+                self.applyActiveLang();
+                return;
+            }
+
+            var clangsRaw = $trigger.attr('data-ylf-clangs');
+            var clangs = [];
+            try {
+                clangs = JSON.parse(clangsRaw || '[]');
+            } catch (e) {
+                clangs = [];
+            }
+
+            if (clangs.length < 2) {
+                self.applyActiveLang();
+                return;
+            }
+
+            // Trigger-Button in Dropdown-Container verwandeln
+            var activeId = parseInt(localStorage.getItem('ylf_active_clang') || '0', 10);
+            var activeClang = null;
+            for (var i = 0; i < clangs.length; i++) {
+                if (clangs[i].id === activeId) {
+                    activeClang = clangs[i];
+                    break;
+                }
+            }
+            if (!activeClang) {
+                activeClang = clangs[0];
+            }
+
+            // Icon + aktueller Code als Button-Label
+            $trigger.html(
+                '<i class="rex-icon fa-language"></i> '
+                + '<span class="ylf-clang-badge">' + self.escapeHtml(activeClang.code.toUpperCase()) + '</span>'
+                + ' <span class="caret"></span>'
+            );
+            $trigger.attr('data-toggle', 'dropdown')
+                    .attr('aria-haspopup', 'true')
+                    .attr('aria-expanded', 'false')
+                    .addClass('dropdown-toggle');
+
+            // Da der Trigger bereits in einer btn-group liegt (durch YForm generiert),
+            // dürfen wir ihn NICHT nochmals wrappen, sonst funktioniert data-toggle="dropdown" in Bootstrap 3 nicht richtig.
+            // Stattdessen fügen wir das Dropdown-Menü direkt nach dem Trigger in die bestehende btn-group ein.
+            var $group = $trigger.closest('.btn-group');
+            if ($group.length === 0) {
+                // Fallback falls keine btn-group existiert
+                $trigger.wrap('<div class="btn-group ylf-clang-dropdown"></div>');
+                $group = $trigger.parent();
+            } else {
+                $group.addClass('ylf-clang-dropdown');
+            }
+
+            var menuHtml = '<ul class="dropdown-menu dropdown-menu-right ylf-clang-menu">';
+            menuHtml += '<li class="dropdown-header">Sprache</li>';
+            for (var j = 0; j < clangs.length; j++) {
+                var c = clangs[j];
+                var isCurrent = (c.id === activeClang.id) ? ' class="ylf-clang-current"' : '';
+                menuHtml += '<li' + isCurrent + '>'
+                    + '<a href="#" data-ylf-switch="' + c.id + '">'
+                    + '<strong>' + self.escapeHtml(c.code.toUpperCase()) + '</strong>'
+                    + ' <small>' + self.escapeHtml(c.name) + '</small>'
+                    + '</a></li>';
+            }
+            menuHtml += '</ul>';
+            $group.append(menuHtml);
+
+            // Klick auf Menüeintrag
+            $group.on('click', 'a[data-ylf-switch]', function(e) {
+                e.preventDefault();
+                var newId = parseInt($(this).attr('data-ylf-switch'), 10);
+                localStorage.setItem('ylf_active_clang', String(newId));
+
+                // Button-Badge aktualisieren
+                var newCode = $(this).find('strong').text();
+                $trigger.find('.ylf-clang-badge').text(newCode);
+
+                // Aktive Markierung im Menü setzen
+                $group.find('.ylf-clang-menu li').removeClass('ylf-clang-current');
+                $(this).closest('li').addClass('ylf-clang-current');
+
+                self.applyActiveLang(newId);
+            });
+
+            // Initiale Anzeige
+            self.applyActiveLang(activeClang.id);
+        },
+
+        /**
+         * Blendet alle .ylf-list-clang-Spans aus und zeigt nur den aktiven.
+         * Ohne Parameter wird activeId aus localStorage gelesen.
+         */
+        applyActiveLang: function(activeId) {
+            if (activeId === undefined) {
+                activeId = parseInt(localStorage.getItem('ylf_active_clang') || '0', 10);
+            }
+
+            $('.ylf-list-entry').each(function() {
+                var $entry = $(this);
+                var $spans = $entry.find('.ylf-list-clang');
+
+                // JS ist aktiv: CSS-Fallback deaktivieren
+                $entry.addClass('ylf-js-active');
+
+                if (activeId > 0) {
+                    var $target = $spans.filter('[data-ylf-clang="' + activeId + '"]');
+                    if ($target.length > 0) {
+                        $spans.not($target).hide();
+                        $target.css('display', 'inline-flex');
+                        return;
+                    }
+                }
+
+                // Fallback: Standardsprache des Eintrags zeigen
+                var defaultId = parseInt($entry.attr('data-ylf-default') || '0', 10);
+                if (defaultId > 0) {
+                    var $def = $spans.filter('[data-ylf-clang="' + defaultId + '"]');
+                    $spans.not($def).hide();
+                    $def.css('display', 'inline-flex');
+                } else {
+                    // Alles einblenden wenn kein Match
+                    $spans.css('display', 'inline-flex');
+                }
+            });
+        },
+
         // CKE5 Events binden
         bindCKE5Events: function() {
             var self = this;
@@ -432,6 +696,7 @@
     // Initialize when REDAXO is ready
     $(document).on('rex:ready', function() {
         YformLangFields.init();
+        YformLangFields.initLangSwitch();
     });
 
     // Make globally available

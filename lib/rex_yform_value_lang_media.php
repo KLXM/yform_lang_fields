@@ -207,27 +207,6 @@ class rex_yform_value_lang_media extends rex_yform_value_abstract
         }
 
         $parsed = LangHelper::normalizeLanguageData($value);
-        if (empty($parsed)) {
-            return '<span>-</span>';
-        }
-
-        $displayValues = [];
-        foreach ($parsed as $item) {
-            if (empty($item['value'])) {
-                continue;
-            }
-
-            $clang = rex_clang::get($item['clang_id']);
-            $langCode = $clang ? $clang->getCode() : (string) $item['clang_id'];
-
-            if (is_array($item['value'])) {
-                $mediaValue = isset($item['value']['media']) && is_scalar($item['value']['media']) ? (string) $item['value']['media'] : '';
-                $displayValues[] = $langCode . ': ' . rex_escape($mediaValue);
-            } elseif (is_scalar($item['value'])) {
-                $displayValues[] = $langCode . ': ' . rex_escape((string) $item['value']);
-            }
-        }
-
-        return '<span>' . implode(' | ', $displayValues) . '</span>';
+        return LangHelper::buildListPopover($parsed, 'media', 0);
     }
 }
