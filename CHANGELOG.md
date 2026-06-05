@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 - 2026-06-05
+### Behoben
+- **Backend-CSS-Leak in 1.2.0:** Fehlerhafte globale CSS-Regeln in `assets/lang-fields.css` konnten das REDAXO-Backend-Layout beeinflussen (u.a. kleinere Darstellung und begrenzte Breite). Die Styles sind jetzt wieder korrekt auf `.yform-lang-field`/`ylf-*` gescoped.
+
 ## 1.2.0 - 2024-06-04
 ### Hinzugefügt
 - **WriteAssist KI-Integration:** YForm Lang Fields und das WriteAssist-AddOn sind nun ein Team! In den YForm-Feldeinstellungen lässt sich die KI-Übersetzung aktivieren. Anschließend erscheint in den Zielsprachen ein Button, mit dem der Text der Primärsprache via DeepL/OpenAI mit nur einem Klick automatisch übersetzt und eingefügt wird.
