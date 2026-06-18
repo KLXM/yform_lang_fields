@@ -219,6 +219,53 @@ $yform->setValueField('lang_text', [
 
 Ohne `list_lang` wird die erste im Datensatz gespeicherte Übersetzung angezeigt.
 
+## 🔗 Anbindung an URL-Addon und YRewrite
+
+Die eigentliche URL-Erzeugung bleibt im URL-Addon bzw. in YRewrite. Das YForm-Lang-Fields-Addon liefert nur den mehrsprachigen Inhalt, zum Beispiel den Titel, den man dann im URL-Addon pro Sprache in einen Slug übersetzen kann.
+
+Ein typisches Muster im `URL_PRE_SAVE`-Hook ist:
+
+```php
+rex_extension::register('URL_PRE_SAVE', static function (rex_extension_point $ep) {
+    $url = $ep->getSubject();
+    $params = $ep->getParams();
+
+    if (!$url instanceof \Url\Url) {
+        return $url;
+    }
+
+    $clangId = (int) ($params['clang_id'] ?? 0);
+    $dataId = (int) ($params['data_id'] ?? 0);
+
+    if ($clangId < 1 || $dataId < 1) {
+        return $url;
+    }
+
+    $dataset = \Article::get($dataId); // Beispiel: eigene Modelklasse
+    if (!$dataset) {
+        return $url;
+    }
+
+    $title = (string) $dataset->getLangValue('title', $clangId);
+    if ('' === trim($title)) {
+        return $url;
+    }
+
+    $slug = rex_string::normalize($title);
+    $path = trim($url->getPath(), '/');
+    $parts = '' === $path ? [] : explode('/', $path);
+
+    if (!empty($parts)) {
+        $parts[count($parts) - 1] = $slug;
+        return new \Url\Url('/' . implode('/', $parts) . '/');
+    }
+
+    return $url;
+});
+```
+
+Wenn ihr keine Modelklasse verwendet, könnt ihr die Übersetzung auch direkt aus dem JSON-Feld laden und den passenden `clang_id`-Eintrag herausfiltern.
+
 ## 📚 Beispiele
 
 ### Vollständiges Beispiel: Mehrsprachiger Blog-Artikel
