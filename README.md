@@ -241,7 +241,7 @@ rex_extension::register('URL_PRE_SAVE', static function (rex_extension_point $ep
         return $url;
     }
 
-    $dataset = \Article::get($dataId); // Beispiel: eigene Modelklasse
+    $dataset = \News::get($dataId); // Beispiel: eigene Modelklasse
     if (!$dataset) {
         return $url;
     }
