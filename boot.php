@@ -69,3 +69,78 @@ if (rex::isBackend()) {
         $ep->setSubject($subject);
     });
 }
+
+// URL-Addon: Lang-Feld-JSON in SEO-Tags der URL-Profile auflösen
+rex_extension::register('PACKAGES_INCLUDED', static function () {
+    if (!rex::isFrontend() || !rex_addon::get('url')->isAvailable()) {
+        return;
+    }
+
+    rex_extension::register('URL_SEO_TAGS', static function (rex_extension_point $ep) {
+        $manager = \Url\Url::resolveCurrent();
+        if (!$manager) {
+            return;
+        }
+
+        $tags = $ep->getSubject();
+        $clangId = rex_clang::getCurrentId();
+
+        $normalize = static function (string $value): string {
+            $value = rex_escape(strip_tags($value));
+            return str_replace(["\n", "\r"], [' ', ''], $value);
+        };
+
+        $raw = $manager->getSeoTitle();
+        if (is_string($raw) && [] !== \KLXM\YformLangFields\LangHelper::normalizeLanguageData($raw)) {
+            $value = \KLXM\YformLangFields\LangHelper::getValueForLanguage($raw, $clangId);
+            if ('' !== trim($value)) {
+                $title = $normalize($value);
+                $tags['title'] = '<title>' . $title . '</title>';
+                $tags['og:title'] = '<meta property="og:title" content="' . $title . '" />';
+                $tags['twitter:title'] = '<meta name="twitter:title" content="' . $title . '" />';
+            } else {
+                unset($tags['title'], $tags['og:title'], $tags['twitter:title']);
+            }
+        }
+
+        $raw = $manager->getSeoDescription();
+        if (is_string($raw) && [] !== \KLXM\YformLangFields\LangHelper::normalizeLanguageData($raw)) {
+            $value = \KLXM\YformLangFields\LangHelper::getValueForLanguage($raw, $clangId);
+            if ('' !== trim($value)) {
+                $description = $normalize($value);
+                $tags['description'] = '<meta name="description" content="' . $description . '" />';
+                $tags['og:description'] = '<meta property="og:description" content="' . $description . '" />';
+                $tags['twitter:description'] = '<meta name="twitter:description" content="' . $description . '" />';
+            } else {
+                unset($tags['description'], $tags['og:description'], $tags['twitter:description']);
+            }
+        }
+
+        // lang_media als SEO-Bild: Url\Seo hat für JSON-Werte keine Bild-Tags
+        // erzeugt (rex_media::get(JSON) schlägt fehl), daher hier neu aufbauen
+        $raw = $manager->getSeoImage();
+        if (is_string($raw) && [] !== \KLXM\YformLangFields\LangHelper::normalizeLanguageData($raw)) {
+            $value = \KLXM\YformLangFields\LangHelper::getValueForLanguage($raw, $clangId);
+            $images = explode(',', $value);
+            $media = rex_media::get(trim((string) array_shift($images)));
+            if ($media) {
+                $url = $manager->getUrl();
+                $url->withSolvedScheme();
+                $mediaUrl = $url->getSchemeAndHttpHost() . $media->getUrl();
+
+                $tags['image'] = '<meta name="image" content="' . $mediaUrl . '" />';
+                $tags['og:image'] = '<meta property="og:image" content="' . $mediaUrl . '" />';
+                if ($media->getWidth()) {
+                    $tags['og:image:width'] = '<meta property="og:image:width" content="' . $media->getWidth() . '" />';
+                }
+                if ($media->getHeight()) {
+                    $tags['og:image:height'] = '<meta property="og:image:height" content="' . $media->getHeight() . '" />';
+                }
+                $tags['twitter:image'] = '<meta name="twitter:image" content="' . $mediaUrl . '" />';
+                $tags['twitter:card'] = '<meta name="twitter:card" content="summary_large_image" />';
+            }
+        }
+
+        $ep->setSubject($tags);
+    }, rex_extension::EARLY);
+});
