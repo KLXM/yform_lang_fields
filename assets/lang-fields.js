@@ -7,7 +7,18 @@
     'use strict';
 
     var YformLangFields = {
-        
+
+        /**
+         * Liest einen der data-i18n-* Werte vom umschließenden .yform-lang-field.
+         * "key" ist der camelCase-Name, den jQuery aus data-i18n-foo-bar macht: "i18nFooBar".
+         * Fällt auf den übergebenen Default zurück, falls das Attribut fehlt (z.B. altes Template).
+         */
+        getI18n: function($context, key, fallback) {
+            var $field = $context.closest('.yform-lang-field');
+            var value = $field.data(key);
+            return (value !== undefined && value !== null && value !== '') ? value : fallback;
+        },
+
         init: function() {
             this.bindEvents();
             this.initExistingFields();
@@ -32,24 +43,27 @@
             // Collapse / Expand All
             $(document).on('click', '.btn-collapse-all-lang', function(e) {
                 e.preventDefault();
-                var $container = $(this).closest('.yform-lang-field');
+                var $btn = $(this);
+                var $container = $btn.closest('.yform-lang-field');
                 var $panels = $container.find('.lang-field-item');
-                var $icon = $(this).find('i');
-                
+                var $icon = $btn.find('i');
+
                 var isCollapsed = $icon.hasClass('fa-expand');
-                
+                var labelCollapse = $btn.data('label-collapse') || 'collapse';
+                var labelExpand = $btn.data('label-expand') || 'expand';
+
                 if (isCollapsed) {
                     $panels.find('.panel-body').slideDown(200);
                     $panels.find('.ylf-collapse-icon').removeClass('fa-chevron-right').addClass('fa-chevron-down');
                     $panels.removeClass('ylf-is-collapsed');
                     $icon.removeClass('fa-expand').addClass('fa-compress');
-                    $(this).html('<i class="fa fa-compress"></i> minimieren');
+                    $btn.html('<i class="fa fa-compress"></i> ' + self.escapeHtml(labelCollapse));
                 } else {
                     $panels.find('.panel-body').slideUp(200);
                     $panels.find('.ylf-collapse-icon').removeClass('fa-chevron-down').addClass('fa-chevron-right');
                     $panels.addClass('ylf-is-collapsed');
                     $icon.removeClass('fa-compress').addClass('fa-expand');
-                    $(this).html('<i class="fa fa-expand"></i> maximieren');
+                    $btn.html('<i class="fa fa-expand"></i> ' + self.escapeHtml(labelExpand));
                 }
             });
 
@@ -113,7 +127,7 @@
             var $container = $btn.closest('.yform-lang-field');
             var $langSelect = $container.find('.lang-select-new');
             var selectedLangId = $langSelect.val();
-            
+
             if (!selectedLangId) {
                 return;
             }
@@ -128,8 +142,7 @@
             var withText = ($btn.data('with-text') === '1' || $btn.data('with-text') === 1 || $btn.data('with-text') === true);
             var textLabel = $btn.data('text-label') || 'Beschreibung';
             var editorType = String($btn.data('editor-type') || 'none').toLowerCase();
-            
-            console.log('Button data-with-text:', $btn.data('with-text'), 'Converted to boolean:', withText);
+            var targetLangMap = this.parseAttributesData($btn.attr('data-target-lang-map'));
 
             // Generate new index
             var newIndex = $container.find('.lang-field-item').length;
@@ -155,7 +168,12 @@
                 category: $btn.data('category') || '',
                 description: description,
                 withText: withText,
-                textLabel: textLabel
+                textLabel: textLabel,
+                targetLangMap: targetLangMap,
+                writeassistTranslateTitle: this.getI18n($btn, 'i18nWriteassistTranslateTitle', 'Translate with WriteAssist AI'),
+                removeTranslationTitle: this.getI18n($btn, 'i18nRemoveTranslationTitle', 'Remove translation'),
+                selectMediaTitle: this.getI18n($btn, 'i18nSelectMediaTitle', 'Select media'),
+                removeMediaTitle: this.getI18n($btn, 'i18nRemoveMediaTitle', 'Remove media')
             });
 
             // Add to container
@@ -173,26 +191,30 @@
             // Initialize configured rich-text editors for the new field.
             this.initEditorsForNewField($newField, editorType);
 
-            // Update delete buttons
+            // Update delete buttons: das Lock-Icon der bisher einzigen (ersten) Sprache
+            // muss durch einen echten Entfernen-Button ersetzt werden, sobald eine zweite
+            // Sprache existiert.
             var $items = $container.find('.lang-field-item');
             if ($items.length > 1) {
+                var removeTitle = this.escapeHtml(this.getI18n($btn, 'i18nRemoveTranslationTitle', 'Remove translation'));
                 $items.each(function(index) {
-                    var $lockedDiv = $(this).find('div[title="Erste Sprache kann nicht entfernt werden"]');
-                    if ($lockedDiv.length && index === 0) {
-                        $lockedDiv.replaceWith('<button type="button" class="btn btn-danger btn-block btn-remove-lang-field" title="Übersetzung entfernen"><i class="fa fa-trash"></i></button>');
+                    var $lockedIcon = $(this).find('.panel-heading .fa-lock').closest('span');
+                    if ($lockedIcon.length && index === 0) {
+                        $lockedIcon.replaceWith('<button type="button" class="btn btn-danger btn-xs btn-remove-lang-field" title="' + removeTitle + '"><i class="fa fa-trash"></i></button>');
                     }
                 });
             }
         },
 
         translateLanguageField: function($btn) {
+            var self = this;
             var $item = $btn.closest('.lang-field-item');
             var $container = $item.closest('.lang-fields-container');
-            
+
             // Get the first lang-field item (which acts as source language)
             var $sourceItem = $container.find('.lang-field-item').first();
             if ($sourceItem.length === 0 || $sourceItem.get(0) === $item.get(0)) {
-                alert('Achtung: Dies ist die Primärsprache. Bitte öffnet für die Übersetzung einen der Zielsprachen-Tabs weiter unten und klickt dort auf übersetzen.');
+                alert(self.getI18n($btn, 'i18nWriteassistSourceEmptyOnlyPrimary', 'This is the primary language. Please open one of the target language tabs below to translate.'));
                 return;
             }
             
@@ -213,7 +235,7 @@
             }
             
             if (!sourceText || sourceText.trim() === '') {
-                alert('Das ursprüngliche Feld ist leer. Bitte zuerst einen Text in der primären Sprache eingeben!');
+                alert(self.getI18n($btn, 'i18nWriteassistSourceEmpty', 'The source field is empty. Please enter text in the primary language first!'));
                 return;
             }
 
@@ -265,13 +287,15 @@
                             $icon.attr('class', oldClass);
                         }, 2000);
                     } else {
-                        alert('Übersetzung fehlgeschlagen oder leer.');
+                        alert(self.getI18n($btn, 'i18nWriteassistTranslateFailed', 'Translation failed or empty.'));
                         $icon.attr('class', oldClass);
                     }
                 },
                 error: function(xhr) {
-                    var errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Unbekannter Fehler bei der Übersetzung.';
-                    alert('Fehler: ' + errorMsg);
+                    var errorMsg = xhr.responseJSON && xhr.responseJSON.error
+                        ? xhr.responseJSON.error
+                        : self.getI18n($btn, 'i18nWriteassistTranslateErrorUnknown', 'Unknown error during translation.');
+                    alert(self.getI18n($btn, 'i18nWriteassistTranslateError', 'Error: {0}').replace('{0}', errorMsg));
                     $icon.attr('class', oldClass);
                 },
                 complete: function() {
@@ -289,7 +313,7 @@
             // Verhindere das Löschen der ersten Sprache wenn sie die einzige ist
             var totalItems = $container.find('.lang-field-item').length;
             if (itemIndex === 0 && totalItems === 1) {
-                alert('Die erste Sprache kann nicht entfernt werden.');
+                alert(this.getI18n($container, 'i18nRemoveFirstLanguageDenied', 'The first language cannot be removed.'));
                 return;
             }
             
@@ -340,10 +364,11 @@
                     $(this).attr('data-index', index);
                     $(this).find('input, textarea').each(function() {
                         var name = $(this).attr('name');
-                        if (name && name.includes('[')) {
-                            var baseName = name.split('[')[0];
-                            var suffix = name.substring(name.indexOf('][') + 1);
-                            $(this).attr('name', baseName + '[' + index + suffix);
+                        // Nur den Zeilenindex ersetzen (vorletztes [...]-Segment),
+                        // nicht das erste "][" im Namen (das liegt zwischen Formname und Feld-ID).
+                        var newName = name ? name.replace(/\[\d+\](\[[^\]]+\])$/, '[' + index + ']$1') : name;
+                        if (newName) {
+                            $(this).attr('name', newName);
                         }
                     });
                 });
@@ -355,7 +380,8 @@
                     
                     if (index === 0 && $items.length === 1) {
                         // Lock-Icon mit gleicher Positionierung wie Delete-Button
-                        $deleteBtn.replaceWith('<span class="text-muted" style="position: absolute; top: 10px; right: 10px; font-size: 11px;"><i class="fa fa-lock"></i></span>');
+                        var lockTitle = self.escapeHtml(self.getI18n($container, 'i18nFirstLanguageLockedTitle', 'First language cannot be removed'));
+                        $deleteBtn.replaceWith('<span class="text-muted" style="position: absolute; top: 10px; right: 10px; font-size: 11px;" title="' + lockTitle + '"><i class="fa fa-lock"></i></span>');
                     }
                 });
                 
@@ -377,12 +403,16 @@
             html += '<div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 5px; align-items: center;">';
             // Nur Translation-Button einblenden, wenn im DOM das WriteAssist Feature generell aktiv ist
             if (options.hasTranslationActive && (options.fieldType === 'text' || options.fieldType === 'textarea')) {
-                var langCodeUpper = String(options.langCode).substring(0,2).toUpperCase();
-                html += '<button type="button" class="btn btn-default btn-xs btn-writeassist-translate" data-target-lang="' + langCodeUpper + '" title="Mit WriteAssist KI übersetzen">';
+                // Bevorzugt den vom Server aufgelösten DeepL-Code (AutoTranslateService::getDeeplCode),
+                // sonst Fallback auf die ersten beiden Zeichen des clang-Codes.
+                var targetLang = (options.targetLangMap && options.targetLangMap[options.clangId])
+                    ? options.targetLangMap[options.clangId]
+                    : String(options.langCode).substring(0, 2).toUpperCase();
+                html += '<button type="button" class="btn btn-default btn-xs btn-writeassist-translate" data-target-lang="' + this.escapeHtml(targetLang) + '" title="' + this.escapeHtml(options.writeassistTranslateTitle) + '">';
                 html += '<i class="fa fa-language text-primary"></i></button>';
             }
             html += '<button type="button" class="btn btn-danger btn-xs btn-remove-lang-field" ';
-            html += 'title="Übersetzung entfernen"><i class="fa fa-trash"></i></button>';
+            html += 'title="' + this.escapeHtml(options.removeTranslationTitle) + '"><i class="fa fa-trash"></i></button>';
             html += '</div></div>';
             
             // Panel Body mit dem Feld
@@ -464,9 +494,9 @@
                 html += 'class="form-control" value="" data-clang-id="' + options.clangId + '" readonly />';
                 html += '<input type="hidden" name="' + options.inputName + '[clang_id]" value="' + options.clangId + '" />';
                 html += '<span class="input-group-btn">';
-                html += '<a href="#" class="btn btn-popup" onclick="openREXMedia(' + widgetId + openParams + '); return false;" title="Medium auswählen">';
+                html += '<a href="#" class="btn btn-popup" onclick="openREXMedia(' + widgetId + openParams + '); return false;" title="' + this.escapeHtml(options.selectMediaTitle) + '">';
                 html += '<i class="rex-icon rex-icon-open-mediapool"></i></a>';
-                html += '<a href="#" class="btn btn-popup" onclick="deleteREXMedia(' + widgetId + '); return false;" title="Medium entfernen">';
+                html += '<a href="#" class="btn btn-popup" onclick="deleteREXMedia(' + widgetId + '); return false;" title="' + this.escapeHtml(options.removeMediaTitle) + '">';
                 html += '<i class="rex-icon rex-icon-delete-media"></i></a>';
                 html += '</span>';
                 html += '</div>';
@@ -522,7 +552,8 @@
                 openREXMedia(inputId, callbackName);
             } else {
                 console.warn('YForm Lang Media: openREXMedia Funktion nicht verfügbar');
-                var filename = prompt('Dateiname eingeben:', $input.val());
+                var promptLabel = this.getI18n($btn, 'i18nMediaFilenamePrompt', 'Enter filename:');
+                var filename = prompt(promptLabel, $input.val());
                 if (filename !== null) {
                     $input.val(filename);
                 }

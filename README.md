@@ -182,7 +182,7 @@ $yform->setValueField('lang_media', [
 | Parameter | Typ | Standard | Beschreibung |
 |-----------|-----|----------|--------------|
 | `attributes` | json | '' | Zusätzliche HTML-Attribute |
-| `list_lang` | int | '' | Sprach-ID für Listenspalte (leer = erste gespeicherte Übersetzung) |
+| `use_writeassist` | bool | false | KI-Übersetzungs-Button (WriteAssist) für Zielsprachen aktivieren |
 
 ### Lang Textarea Parameter
 
@@ -190,7 +190,7 @@ $yform->setValueField('lang_media', [
 |-----------|-----|----------|--------------|
 | `rows` | int | 5 | Anzahl der Zeilen |
 | `attributes` | json | '' | Zusätzliche HTML-Attribute inkl. Editorsteuerung (`class`, optional `profile`, optional `lang`) |
-| `list_lang` | int | '' | Sprach-ID für Listenspalte (leer = erste gespeicherte Übersetzung) |
+| `use_writeassist` | bool | false | KI-Übersetzungs-Button (WriteAssist) für Zielsprachen aktivieren |
 
 ### Lang Media Parameter
 
@@ -201,23 +201,24 @@ $yform->setValueField('lang_media', [
 | `preview` | bool | true | Bildvorschau anzeigen |
 | `with_text` | bool | false | Zusätzliches Textfeld aktivieren |
 | `text_label` | string | 'Beschreibung' | Label für Textfeld |
-| `list_lang` | int | '' | Sprach-ID für Listenspalte (leer = erste gespeicherte Übersetzung) |
 
-## 🗂️ Listenansicht
+## 🤖 KI-Übersetzung mit WriteAssist
 
-In der YForm-Datensätzeliste wird je Sprachfeld der erste (oder konfigurierte) Sprachenwert gekürzt angezeigt.
-Zusätzliche Übersetzungen erscheinen als kleiner Badge (z. B. `+2`), der beim Hovern/Fokussieren ein Popover ohne Layout-Sprung einblendet.
+Ist das AddOn [WriteAssist](https://github.com/FriendsOfREDAXO/writeassist) installiert und aktiviert, kann pro `lang_text`- oder `lang_textarea`-Feld die KI-Übersetzung eingeschaltet werden:
 
-**Anzeigesprache fest setzen** (z. B. immer Deutsch zuerst):
 ```php
 $yform->setValueField('lang_text', [
-    'name'      => 'title',
-    'label'     => 'Titel',
-    'list_lang' => 1   // Sprach-ID aus REDAXO System > Sprachen
+    'name' => 'title',
+    'label' => 'Titel',
+    'use_writeassist' => true
 ]);
 ```
 
-Ohne `list_lang` wird die erste im Datensatz gespeicherte Übersetzung angezeigt.
+Ist die Option aktiv, erscheint bei jeder Zielsprache (außer der Primärsprache) ein Button, der den Text der Primärsprache per Klick via DeepL/OpenAI übersetzt und in das Zielfeld einträgt. Die Zielsprache wird dabei, sofern verfügbar, über `AutoTranslateService::getDeeplCode()` von WriteAssist aufgelöst (korrektes Mapping z. B. für `en_gb` → `EN-GB`, `pt_br` → `PT-BR`).
+
+## 🗂️ Listenansicht
+
+In der YForm-Datensätzeliste wird je Sprachfeld die erste im Datensatz gespeicherte Übersetzung gekürzt angezeigt. Über ein Sprachumschalter-Dropdown in der Toolbar kann die angezeigte Sprache für alle Sprachfelder in der Liste live umgeschaltet werden (die Auswahl wird im Browser gemerkt). Zusätzliche Übersetzungen erscheinen als kleiner Badge, der beim Hovern/Fokussieren ein Popover ohne Layout-Sprung einblendet. Über die Option "Fehlende hervorheben" im selben Dropdown lassen sich Datensätze markieren, die nicht in allen online geschalteten Sprachen übersetzt sind.
 
 ## 🔗 Anbindung an URL-Addon und YRewrite
 
@@ -341,11 +342,10 @@ use KLXM\YformLangFields\LangDataset;
 
 class BlogArticle extends LangDataset
 {
-    public static function tableName()
-    {
-        return 'rex_blog_article'; // Deine YForm-Tabelle
-    }
 }
+
+// Modelklasse für die YForm-Tabelle registrieren (z.B. im boot.php des eigenen AddOns)
+rex_yform_manager_dataset::setModelClass('rex_blog_article', BlogArticle::class);
 
 // Jetzt automatisch als Array!
 $article = BlogArticle::get(1);
@@ -367,6 +367,36 @@ $article->save();
 // Raw JSON wenn nötig
 $titleJson = $article->getRawValue('title');
 ```
+
+#### Mit LangQuery (erweiterte Datenbank-Abfragen)
+
+`KLXM\YformLangFields\LangQuery` erweitert `rex_yform_manager_query` um JSON-bewusste `WHERE`/`ORDER BY`/`SELECT`-Bausteine für Sprachfelder:
+
+```php
+use KLXM\YformLangFields\LangQuery;
+
+// Datensätze mit Übersetzung in einer bestimmten Sprache
+$articles = LangQuery::get('rex_blog_article')
+    ->whereTranslationExists('title', 2)
+    ->find();
+
+// Textsuche innerhalb einer Sprache
+$hits = LangQuery::get('rex_blog_article')
+    ->whereTranslationLike('title', 1, 'Redaxo')
+    ->find();
+
+// Sortierung nach übersetztem Feld
+$sorted = LangQuery::get('rex_blog_article')
+    ->orderByTranslation('title', 1, 'DESC')
+    ->find();
+
+// Vollständig / unvollständig übersetzte Datensätze
+$incomplete = LangQuery::get('rex_blog_article')
+    ->whereIncompleteTranslations(['title', 'teaser'], [1, 2])
+    ->find();
+```
+
+Alle Methoden nutzen `JSON_TABLE()`, das MySQL ≥ 8.0.4 bzw. MariaDB ≥ 10.6 voraussetzt.
 
 ## 🗄️ Datenstruktur
 
@@ -556,5 +586,5 @@ Mit Unterstützung von **GitHub Copilot**
 
 ---
 
-**Version**: 1.0.0  
-**Letztes Update**: Oktober 2025
+**Version**: 1.3.0  
+**Letztes Update**: September 2026

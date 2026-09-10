@@ -4,20 +4,32 @@ use KLXM\YformLangFields\LangHelper;
 
 class rex_yform_value_lang_text extends rex_yform_value_abstract
 {
-    public function enterObject(): void
+    /**
+     * Normalisiert den Wert bereits vor der Validierung: YForm hat an dieser
+     * Stelle bereits den Request-Wert via setValue() gesetzt (Array bei
+     * gesendetem Formular, String bei Neuanlage/DB-Wert). Validatoren wie
+     * validate|empty laufen vor enterObject() und müssen den JSON-String sehen.
+     */
+    public function preValidateAction(): void
     {
-        // Wert normalisieren - entweder JSON-String oder leer
-        if (!is_string($this->getValue())) {
+        $rawValue = $this->getValue();
+
+        if (is_array($rawValue)) {
+            $this->setValue($this->formatValueForSave($rawValue));
+        } elseif (!is_string($rawValue)) {
             $this->setValue('');
         }
+    }
 
+    public function enterObject(): void
+    {
         // Default-Wert setzen wenn leer und noch nicht gesendet
         if ('' === $this->getValue() && !$this->params['send']) {
             $default = $this->getElement('default');
             $this->setValue(is_string($default) ? $default : '');
         }
 
-        // Werte für E-Mail und Datenbank setzen (vor Template-Ausgabe)
+        // Werte für E-Mail und Datenbank setzen
         $this->params['value_pool']['email'][$this->getName()] = $this->getValue();
 
         if ($this->saveInDb()) {
@@ -39,24 +51,6 @@ class rex_yform_value_lang_text extends rex_yform_value_abstract
                 'value.lang_field.tpl.php',
                 'value.lang_text.tpl.php',
             ], $templateParams);
-        }
-
-        // POST-Daten verarbeiten
-        if (isset($_POST['FORM'][$this->params['form_name']]['send'])) {
-            $formName = $this->params['form_name'];
-            $fieldId = $this->getId();
-
-            if (isset($_POST['FORM'][$formName][$fieldId]) && is_array($_POST['FORM'][$formName][$fieldId])) {
-                $postValue = $_POST['FORM'][$formName][$fieldId];
-                $jsonValue = $this->formatValueForSave($postValue);
-                $this->setValue($jsonValue);
-
-                $this->params['value_pool']['email'][$this->getName()] = $this->getValue();
-
-                if ($this->saveInDb()) {
-                    $this->params['value_pool']['sql'][$this->getName()] = $this->getValue();
-                }
-            }
         }
     }
 
@@ -135,7 +129,7 @@ class rex_yform_value_lang_text extends rex_yform_value_abstract
 
     public function getDescription(): string
     {
-        return 'lang_text|name|label|[no_db]|[attributes]|[notice]';
+        return 'lang_text|name|label|[use_writeassist]|[no_db]|[attributes]|[notice]|[description]';
     }
 
     /**
@@ -153,6 +147,7 @@ class rex_yform_value_lang_text extends rex_yform_value_abstract
                 'no_db' => ['type' => 'no_db', 'label' => rex_i18n::msg('yform_values_defaults_table'), 'default' => 0],
                 'attributes' => ['type' => 'text', 'label' => rex_i18n::msg('yform_values_defaults_attributes'), 'notice' => rex_i18n::msg('yform_values_defaults_attributes_notice')],
                 'notice' => ['type' => 'text', 'label' => rex_i18n::msg('yform_values_defaults_notice')],
+                'description' => ['type' => 'text', 'label' => 'Beschreibung/Hilfetext', 'notice' => 'Optional: Hilfetext unter dem Label'],
             ],
             'description' => rex_i18n::msg('yform_values_lang_text_description'),
             'db_type' => ['text'],
