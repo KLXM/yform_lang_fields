@@ -12,12 +12,19 @@ use rex_yform_manager_query;
  */
 class LangQuery extends rex_yform_manager_query
 {
+    /** Fortlaufender Zähler für eindeutige Bind-Platzhalternamen je Instanz. */
+    private int $placeholderCounter = 0;
+
     /**
      * Nach Übersetzung in bestimmter Sprache filtern.
      */
     public function whereTranslationExists(string $field, int $clangId): self
     {
-        $this->whereRaw("JSON_EXTRACT(`{$field}`, '\$[*].clang_id') LIKE '%{$clangId}%'");
+        $placeholder = ':lang_exists_' . $this->placeholderCounter++;
+        $this->whereRaw(
+            "EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id')) AS jt WHERE jt.clang_id = {$placeholder})",
+            [$placeholder => $clangId],
+        );
         return $this;
     }
 
@@ -26,7 +33,11 @@ class LangQuery extends rex_yform_manager_query
      */
     public function whereTranslationNotEmpty(string $field, int $clangId): self
     {
-        $this->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(`{$field}`, '\$[*].value[0]')) != '' AND JSON_EXTRACT(`{$field}`, '\$[*].clang_id') = {$clangId}");
+        $placeholder = ':lang_not_empty_' . $this->placeholderCounter++;
+        $this->whereRaw(
+            "EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$placeholder} AND jt.value <> '')",
+            [$placeholder => $clangId],
+        );
         return $this;
     }
 
@@ -44,9 +55,10 @@ class LangQuery extends rex_yform_manager_query
      */
     public function whereTranslationLike(string $field, int $clangId, string $value): self
     {
+        $placeholder = ':lang_like_' . $this->placeholderCounter++;
         $this->whereRaw(
-            "EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$clangId} AND jt.value LIKE :lang_like)",
-            [':lang_like' => '%' . $value . '%'],
+            "EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$clangId} AND jt.value LIKE {$placeholder})",
+            [$placeholder => '%' . $value . '%'],
         );
         return $this;
     }
@@ -72,7 +84,7 @@ class LangQuery extends rex_yform_manager_query
 
         foreach ($fields as $field) {
             foreach ($requiredLanguages as $clangId) {
-                $conditions[] = "JSON_EXTRACT(`{$field}`, '\$[*].clang_id') LIKE '%{$clangId}%'";
+                $conditions[] = "EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id')) AS jt WHERE jt.clang_id = {$clangId})";
             }
         }
 
@@ -95,7 +107,7 @@ class LangQuery extends rex_yform_manager_query
 
         foreach ($fields as $field) {
             foreach ($requiredLanguages as $clangId) {
-                $conditions[] = "JSON_EXTRACT(`{$field}`, '\$[*].clang_id') NOT LIKE '%{$clangId}%'";
+                $conditions[] = "NOT EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id')) AS jt WHERE jt.clang_id = {$clangId})";
             }
         }
 
@@ -112,7 +124,7 @@ class LangQuery extends rex_yform_manager_query
     public function orderByTranslation(string $field, int $clangId, string $direction = 'ASC'): self
     {
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $this->orderByRaw("(SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$clangId} LIMIT 1) {$direction}");
+        $this->orderByRaw("(SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$clangId} LIMIT 1)", $direction);
         return $this;
     }
 
@@ -130,7 +142,7 @@ class LangQuery extends rex_yform_manager_query
      */
     public function groupByTranslationStatus(string $field, int $clangId): self
     {
-        $this->groupByRaw("CASE WHEN JSON_EXTRACT(`{$field}`, '\$[*].clang_id') LIKE '%{$clangId}%' THEN 'translated' ELSE 'untranslated' END");
+        $this->groupByRaw("CASE WHEN EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id')) AS jt WHERE jt.clang_id = {$clangId}) THEN 'translated' ELSE 'untranslated' END");
         return $this;
     }
 
@@ -196,10 +208,10 @@ class LangQuery extends rex_yform_manager_query
     {
         $alias = $alias ?: $field . '_fallback';
 
-        $cases = ["WHEN JSON_EXTRACT(`{$field}`, '\$[*].clang_id') LIKE '%{$preferredClangId}%' THEN (SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$preferredClangId} LIMIT 1)"];
+        $cases = ["WHEN EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id')) AS jt WHERE jt.clang_id = {$preferredClangId}) THEN (SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$preferredClangId} LIMIT 1)"];
 
         foreach ($fallbackClangIds as $clangId) {
-            $cases[] = "WHEN JSON_EXTRACT(`{$field}`, '\$[*].clang_id') LIKE '%{$clangId}%' THEN (SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$clangId} LIMIT 1)";
+            $cases[] = "WHEN EXISTS (SELECT 1 FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id')) AS jt WHERE jt.clang_id = {$clangId}) THEN (SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (clang_id INT PATH '\$.clang_id', value TEXT PATH '\$.value')) AS jt WHERE jt.clang_id = {$clangId} LIMIT 1)";
         }
 
         $cases[] = "ELSE (SELECT jt.value FROM JSON_TABLE(`{$field}`, '\$[*]' COLUMNS (value TEXT PATH '\$.value')) AS jt LIMIT 1)";

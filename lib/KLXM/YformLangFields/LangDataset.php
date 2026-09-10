@@ -228,7 +228,7 @@ class LangDataset extends rex_yform_manager_dataset
     {
         $multilangFields = self::getMultilangFields($this->getTableName());
         $totalFields = count($multilangFields);
-        $languages = LangHelper::getActiveLanguages();
+        $languages = LangHelper::getOnlineLanguages();
         $status = [];
 
         foreach ($languages as $lang) {

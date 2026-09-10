@@ -8,23 +8,27 @@ yform_lang_fields_translation = Translation
 yform_lang_fields_no_translations = No translations available
 yform_lang_fields_max_one_per_language = Only one translation per language allowed
 
+# UI controls
+yform_lang_fields_collapse_all = collapse
+yform_lang_fields_expand_all = expand
+yform_lang_fields_collapse_all_title = Collapse / expand all languages
+yform_lang_fields_remove_translation_title = Remove translation
+yform_lang_fields_remove_first_language_denied = The first language cannot be removed.
+yform_lang_fields_first_language_locked_title = First language cannot be removed
+yform_lang_fields_select_media_title = Select media
+yform_lang_fields_remove_media_title = Remove media
+yform_lang_fields_writeassist_translate_title = Translate with WriteAssist AI
+yform_lang_fields_writeassist_source_empty_only_primary = Note: this is the primary language. Please open one of the target language tabs below to translate and click translate there.
+yform_lang_fields_writeassist_source_empty = The source field is empty. Please enter text in the primary language first!
+yform_lang_fields_writeassist_translate_failed = Translation failed or empty.
+yform_lang_fields_writeassist_translate_error = Error: {0}
+yform_lang_fields_writeassist_translate_error_unknown = Unknown error during translation.
+yform_lang_fields_media_filename_prompt = Enter filename:
+
 # Field descriptions
+yform_values_lang_text_description = Multilingual text field with JSON storage
+yform_values_lang_textarea_description = Multilingual textarea field with optional CKEditor5
+yform_values_lang_media_description = Multilingual media field for different files per language
 yform_lang_fields_lang_text_desc = Multilingual text field with JSON storage
 yform_lang_fields_lang_textarea_desc = Multilingual textarea field with optional CKEditor5
 yform_lang_fields_lang_media_desc = Multilingual media field for different files per language
-
-# Settings
-yform_lang_fields_settings = Settings
-yform_lang_fields_enable_all_tables = Enable for all YForm tables
-yform_lang_fields_default_required_languages = Default required languages
-yform_lang_fields_enable_auto_translation = Enable automatic translation (experimental)
-
-# Validation messages
-yform_lang_fields_validation_required = This field is required in at least one language
-yform_lang_fields_validation_duplicate_language = This language has already been added
-yform_lang_fields_validation_invalid_json = Invalid JSON format in language data
-
-# API messages
-yform_lang_fields_api_dataset_get_lang = Get value for language {0}
-yform_lang_fields_api_dataset_set_lang = Set value for language {0}
-yform_lang_fields_api_dataset_has_translation = Check translation for language {0}

@@ -8,6 +8,23 @@ yform_lang_fields_translation = Übersetzung
 yform_lang_fields_no_translations = Keine Übersetzungen vorhanden
 yform_lang_fields_max_one_per_language = Pro Sprache ist nur eine Übersetzung erlaubt
 
+# UI-Bedienelemente
+yform_lang_fields_collapse_all = minimieren
+yform_lang_fields_expand_all = maximieren
+yform_lang_fields_collapse_all_title = Alle Sprachen minimieren / maximieren
+yform_lang_fields_remove_translation_title = Übersetzung entfernen
+yform_lang_fields_remove_first_language_denied = Die erste Sprache kann nicht entfernt werden.
+yform_lang_fields_first_language_locked_title = Erste Sprache kann nicht entfernt werden
+yform_lang_fields_select_media_title = Medium auswählen
+yform_lang_fields_remove_media_title = Medium entfernen
+yform_lang_fields_writeassist_translate_title = Mit WriteAssist KI übersetzen
+yform_lang_fields_writeassist_source_empty_only_primary = Achtung: Dies ist die Primärsprache. Bitte öffnet für die Übersetzung einen der Zielsprachen-Tabs weiter unten und klickt dort auf übersetzen.
+yform_lang_fields_writeassist_source_empty = Das ursprüngliche Feld ist leer. Bitte zuerst einen Text in der primären Sprache eingeben!
+yform_lang_fields_writeassist_translate_failed = Übersetzung fehlgeschlagen oder leer.
+yform_lang_fields_writeassist_translate_error = Fehler: {0}
+yform_lang_fields_writeassist_translate_error_unknown = Unbekannter Fehler bei der Übersetzung.
+yform_lang_fields_media_filename_prompt = Dateiname eingeben:
+
 # Field descriptions
 yform_values_lang_text_description = Mehrsprachiges Textfeld mit JSON-Speicherung
 yform_values_lang_textarea_description = Mehrsprachiges Textarea-Feld mit JSON-Speicherung
@@ -16,19 +33,3 @@ yform_values_lang_media_description = Mehrsprachiges Medienfeld mit JSON-Speiche
 yform_lang_fields_lang_text_desc = Mehrsprachiges Textfeld mit JSON-Speicherung
 yform_lang_fields_lang_textarea_desc = Mehrsprachiges Textarea-Feld mit optional CKEditor5
 yform_lang_fields_lang_media_desc = Mehrsprachiges Medienfeld für verschiedene Dateien pro Sprache
-
-# Settings
-yform_lang_fields_settings = Einstellungen
-yform_lang_fields_enable_all_tables = Für alle YForm-Tabellen aktivieren
-yform_lang_fields_default_required_languages = Standard-Pflichtsprachen
-yform_lang_fields_enable_auto_translation = Automatische Übersetzung aktivieren (experimental)
-
-# Validation messages
-yform_lang_fields_validation_required = Dieses Feld ist in mindestens einer Sprache erforderlich
-yform_lang_fields_validation_duplicate_language = Diese Sprache wurde bereits hinzugefügt
-yform_lang_fields_validation_invalid_json = Ungültiges JSON-Format in den Sprachdaten
-
-# API messages
-yform_lang_fields_api_dataset_get_lang = Wert für Sprache {0} abrufen
-yform_lang_fields_api_dataset_set_lang = Wert für Sprache {0} setzen
-yform_lang_fields_api_dataset_has_translation = Übersetzung für Sprache {0} prüfen

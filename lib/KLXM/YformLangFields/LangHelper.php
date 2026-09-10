@@ -8,13 +8,27 @@ use rex_i18n;
 class LangHelper
 {
     /**
-     * Alle aktiven Sprachen abrufen.
+     * Alle in REDAXO konfigurierten Sprachen abrufen (inklusive offline geschalteter).
+     *
+     * Trotz des Namens KEINE Filterung auf Online-Sprachen (Bestandsverhalten,
+     * aus Kompatibilitätsgründen unverändert). Für Übersetzungs-Vollständigkeit
+     * bitte {@see self::getOnlineLanguages()} verwenden.
      *
      * @return array<int, rex_clang>
      */
     public static function getActiveLanguages(): array
     {
         return rex_clang::getAll();
+    }
+
+    /**
+     * Alle online geschalteten Sprachen abrufen.
+     *
+     * @return array<int, rex_clang>
+     */
+    public static function getOnlineLanguages(): array
+    {
+        return rex_clang::getAll(true);
     }
 
     /**
@@ -248,17 +262,15 @@ class LangHelper
     {
         if (is_numeric($input)) {
             $id = (int) $input;
-            if ($id > 0 && 
-rex_clang::exists($id)) {
+            if ($id > 0 && rex_clang::exists($id)) {
                 return $id;
             }
             return 0;
         }
 
-        if (is_string($input) && $input !== '') {
+        if (is_string($input) && '' !== $input) {
             $code = strtolower(trim($input));
-            foreach (
-rex_clang::getAll() as $clang) {
+            foreach (rex_clang::getAll() as $clang) {
                 if (strtolower($clang->getCode()) === $code) {
                     return $clang->getId();
                 }

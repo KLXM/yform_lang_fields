@@ -27,7 +27,20 @@ $writeAssistActive = $useWriteAssist && rex_addon::get('writeassist')->isAvailab
 $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
 ?>
 
-<div class="form-group <?= $fieldClass ?>" id="<?= $this->getHTMLId() ?>">
+<div class="form-group <?= $fieldClass ?>" id="<?= $this->getHTMLId() ?>"
+     data-i18n-remove-first-language-denied="<?= rex_escape(rex_i18n::msg('yform_lang_fields_remove_first_language_denied')) ?>"
+     data-i18n-first-language-locked-title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_first_language_locked_title')) ?>"
+     data-i18n-remove-translation-title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_remove_translation_title')) ?>"
+     data-i18n-writeassist-translate-title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_translate_title')) ?>"
+     data-i18n-writeassist-source-empty-only-primary="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_source_empty_only_primary')) ?>"
+     data-i18n-writeassist-source-empty="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_source_empty')) ?>"
+     data-i18n-writeassist-translate-failed="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_translate_failed')) ?>"
+     data-i18n-writeassist-translate-error-unknown="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_translate_error_unknown')) ?>"
+     data-i18n-writeassist-translate-error="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_translate_error')) ?>"
+     data-i18n-media-filename-prompt="<?= rex_escape(rex_i18n::msg('yform_lang_fields_media_filename_prompt')) ?>"
+     data-i18n-select-media-title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_select_media_title')) ?>"
+     data-i18n-remove-media-title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_remove_media_title')) ?>"
+>
 
     <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px;">
         <label class="control-label" style="margin-bottom: 0;">
@@ -36,8 +49,8 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                 <span class="text-danger">*</span>
             <?php endif; ?>
         </label>
-        <button type="button" class="btn btn-default btn-xs btn-collapse-all-lang" title="Alle Sprachen minimieren / maximieren">
-            <i class="fa fa-compress"></i> minimieren
+        <button type="button" class="btn btn-default btn-xs btn-collapse-all-lang" title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_collapse_all_title')) ?>" data-label-collapse="<?= rex_escape(rex_i18n::msg('yform_lang_fields_collapse_all')) ?>" data-label-expand="<?= rex_escape(rex_i18n::msg('yform_lang_fields_expand_all')) ?>">
+            <i class="fa fa-compress"></i> <?= rex_escape(rex_i18n::msg('yform_lang_fields_collapse_all')) ?>
         </button>
     </div>
 
@@ -76,22 +89,27 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                     <!-- Aktionen oben rechts -->
                     <div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 5px; align-items: center;">
                         <?php if ($writeAssistActive && ('text' === $field_type || 'textarea' === $field_type) && $index > 0): ?>
+                            <?php
+                            $targetLangCode = class_exists(\FriendsOfREDAXO\WriteAssist\AutoTranslateService::class)
+                                ? \FriendsOfREDAXO\WriteAssist\AutoTranslateService::getDeeplCode($clangId)
+                                : strtoupper(substr($clang->getCode(), 0, 2));
+                            ?>
                             <button type="button"
                                     class="btn btn-default btn-xs btn-writeassist-translate"
-                                    data-target-lang="<?= rex_escape(strtoupper(substr($clang->getCode(), 0, 2))) ?>"
-                                    title="Mit WriteAssist KI übersetzen">
+                                    data-target-lang="<?= rex_escape($targetLangCode) ?>"
+                                    title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_writeassist_translate_title')) ?>">
                                 <i class="fa fa-language text-primary"></i>
                             </button>
                         <?php endif; ?>
-                        
+
                         <?php if ($index > 0 || count($value) > 1): ?>
                             <button type="button"
                                     class="btn btn-danger btn-xs btn-remove-lang-field"
-                                    title="Übersetzung entfernen">
+                                    title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_remove_translation_title')) ?>">
                                 <i class="fa fa-trash"></i>
                             </button>
                         <?php else: ?>
-                            <span class="text-muted" style="font-size: 11px; padding: 0 4px;">
+                            <span class="text-muted" style="font-size: 11px; padding: 0 4px;" title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_first_language_locked_title')) ?>">
                                 <i class="fa fa-lock"></i>
                             </span>
                         <?php endif; ?>
@@ -195,13 +213,13 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                             <input type="hidden" name="FORM[<?= rex_escape($this->params['form_name']) ?>][<?= $this->getId() ?>][<?= (int) $index ?>][clang_id]" value="<?= $clangId ?>" />
                             <span class="input-group-btn">
                                 <a href="#" class="btn btn-popup"
-                                   onclick="openREXMedia(<?= $widgetId ?><?php if ('' !== $mediaParams): ?>, '<?= rex_escape($mediaParams) ?>'<?php endif; ?>); return false;"
-                                   title="Medium auswählen">
+                                   onclick="openREXMedia(<?= $widgetId ?><?php if ('' !== $mediaParams): ?>, '<?= rex_escape($mediaParams, 'js') ?>'<?php endif; ?>); return false;"
+                                   title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_select_media_title')) ?>">
                                     <i class="rex-icon rex-icon-open-mediapool"></i>
                                 </a>
                                 <a href="#" class="btn btn-popup"
                                    onclick="deleteREXMedia(<?= $widgetId ?>); return false;"
-                                   title="Medium entfernen">
+                                   title="<?= rex_escape(rex_i18n::msg('yform_lang_fields_remove_media_title')) ?>">
                                     <i class="rex-icon rex-icon-delete-media"></i>
                                 </a>
                             </span>
@@ -248,6 +266,16 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
     $categoryData = $this->getElement('category');
     $categoryData = is_scalar($categoryData) ? (string) $categoryData : '';
     $rowsData = isset($parsed_attributes['rows']) && is_scalar($parsed_attributes['rows']) ? (string) $parsed_attributes['rows'] : '5';
+
+    // DeepL-Zielsprachcodes je clang_id für die dynamisch hinzufügbaren Sprachen vorab auflösen,
+    // damit das JS nicht selbst aus dem clang-Code raten muss (siehe Primärsprachcode-Mapping).
+    $targetLangMap = [];
+    $hasAutoTranslateService = class_exists(\FriendsOfREDAXO\WriteAssist\AutoTranslateService::class);
+    foreach ($available_languages as $lang) {
+        $targetLangMap[$lang->getId()] = $hasAutoTranslateService
+            ? \FriendsOfREDAXO\WriteAssist\AutoTranslateService::getDeeplCode($lang->getId())
+            : strtoupper(substr($lang->getCode(), 0, 2));
+    }
     ?>
     <div class="lang-field-add-section"<?= $addSectionStyle ?>>
         <div class="panel panel-default" style="margin-top: 10px; margin-bottom: 0;">
@@ -255,7 +283,7 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                 <div class="row">
                     <div class="col-sm-4">
                         <select class="form-control input-sm lang-select-new" data-field-name="<?= rex_escape($field_name) ?>">
-                            <option value="">Sprache wählen...</option>
+                            <option value=""><?= rex_escape(rex_i18n::msg('yform_lang_fields_select_language')) ?></option>
                             <?php foreach ($available_languages as $lang): ?>
                                 <option value="<?= $lang->getId() ?>"
                                         data-name="<?= rex_escape($lang->getName()) ?>"
@@ -282,8 +310,9 @@ $editor_type = $editor_type ?? 'none'; // @phpstan-ignore-line fallback
                                 data-with-text="<?= $withTextEnabled ?>"
                                 data-text-label="<?= rex_escape($textLabelData) ?>"
                                 data-description="<?= rex_escape($descriptionData) ?>"
+                                data-target-lang-map="<?= rex_escape((string) json_encode($targetLangMap, JSON_UNESCAPED_UNICODE)) ?>"
                                 disabled="">
-                            <i class="fa fa-plus"></i> Übersetzung hinzufügen
+                            <i class="fa fa-plus"></i> <?= rex_escape(rex_i18n::msg('yform_lang_fields_add_translation')) ?>
                         </button>
                     </div>
                 </div>

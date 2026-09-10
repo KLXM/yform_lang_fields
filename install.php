@@ -14,11 +14,10 @@ if (!rex_addon::get('yform')->isAvailable()) {
     return;
 }
 
-// Prüfen ob Sprachen konfiguriert sind
-$languages = rex_clang::getAll();
-if (count($languages) < 2) {
-    $this->setProperty('installmsg', 'Es müssen mindestens 2 Sprachen in REDAXO konfiguriert sein, um mehrsprachige Felder zu verwenden.');
-    $this->setProperty('install', false);
-    return;
+// Hinweis, falls (noch) nur eine Sprache konfiguriert ist. Kein Installationsabbruch,
+// da die Felder bereits mit einer Sprache funktionieren und sich das Addon so schon
+// vor dem Anlegen weiterer Sprachen installieren lässt.
+if (count(rex_clang::getAll()) < 2) {
+    $this->setProperty('installmsg', 'Hinweis: Es ist aktuell nur eine Sprache in REDAXO konfiguriert. Die mehrsprachigen Felder funktionieren erst mit mindestens zwei Sprachen sinnvoll.');
 }
 
